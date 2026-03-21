@@ -7,10 +7,8 @@ namespace Shinx.Commands
     {
         public void Execute(string[] args)
         {
-            string path = args.Length > 0 ? args[0] : @"0:\";
+            string path = args.Length > 0 ? (args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0]) : Shell.currentDirectory;
 
-            if (!path.StartsWith(@"0:\"))
-                path = @"0:\" + path;
 
             try
             {
@@ -21,7 +19,6 @@ namespace Shinx.Commands
                 }
 
                 var entries = VFSManager.GetDirectoryListing(path);
-                Console.WriteLine("debug: entry count = " + (entries == null ? "null" : entries.Count.ToString()));
 
                 if (entries == null || entries.Count == 0)
                 {

@@ -19,11 +19,7 @@ namespace Shinx.utils
                 return;
             }
 
-            string path = args[0];
-
-
-            if (!path.StartsWith(@"0:\"))
-                path = @"0:\" + path;
+            string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
 
             try
             {

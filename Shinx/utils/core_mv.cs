@@ -12,13 +12,8 @@ namespace Shinx.Commands
                 return;
             }
 
-            string src = args[0];
-            string dst = args[1];
-
-            if (!src.StartsWith(@"0:\"))
-                src = @"0:\" + src;
-            if (!dst.StartsWith(@"0:\"))
-                dst = @"0:\" + dst;
+            string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+            string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
 
             if (!File.Exists(src))
             {
