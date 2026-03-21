@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Shinx.utils
 {
-    internal class core_mkdir : ICommand
+    public class core_mkdir : ICommand
     {
         public void Execute(string[] args)
         {
