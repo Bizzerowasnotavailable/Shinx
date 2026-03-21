@@ -17,6 +17,7 @@ namespace Shinx.Commands
             Console.WriteLine("mkdir: make directory");
             Console.WriteLine("cat: show contents of a file");
             Console.WriteLine("cd: change directory");
+            Console.WriteLine("edit: basic text editor");
         }
     }
 }
