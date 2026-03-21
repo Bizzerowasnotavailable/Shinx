@@ -11,10 +11,14 @@ namespace Shinx.Commands
         {
             commands = new Dictionary<string, ICommand>
             {
-                { "cp", new core_cp() }, // cp is half broken pls someone fix this
                 { "echo", new core_echo() },
                 { "lico", new core_lico() },
                 { "bunnysay", new core_bunnysay() },
+                { "fetch", new uncore_fetch()  },
+                { "cp", new core_cp() },
+                { "clear", new core_clear() },
+                { "ls", new core_ls() },
+                { "mv", new core_mv() },
 
             };
         }
