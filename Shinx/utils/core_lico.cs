@@ -14,6 +14,7 @@ namespace Shinx.Commands
             Console.WriteLine("ls: list files in a directory");
             Console.WriteLine("cp: copy files");
             Console.WriteLine("mv: move files");
+            Console.WriteLine("mkdir: make directory");
         }
     }
 }

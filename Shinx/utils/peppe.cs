@@ -1,3 +1,4 @@
+using Shinx.utils;
 using System;
 using System.Collections.Generic;
 
@@ -19,7 +20,7 @@ namespace Shinx.Commands
                 { "clear", new core_clear() },
                 { "ls", new core_ls() },
                 { "mv", new core_mv() },
-
+                { "mkdir", new core_mkdir() }
             };
         }
 
