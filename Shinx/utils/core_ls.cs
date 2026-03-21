@@ -1,7 +1,5 @@
-// should still be somewhat broken?
-
+using Cosmos.System.FileSystem.VFS;
 using System;
-using System.IO;
 
 namespace Shinx.Commands
 {
@@ -11,26 +9,37 @@ namespace Shinx.Commands
         {
             string path = args.Length > 0 ? args[0] : @"0:\";
 
+            if (!path.StartsWith(@"0:\"))
+                path = @"0:\" + path;
+
             try
             {
-                var dirs = Directory.GetDirectories(path);
-                var files = Directory.GetFiles(path);
+                if (!VFSManager.DirectoryExists(path))
+                {
+                    Console.WriteLine("ls: cannot access " + path);
+                    return;
+                }
 
-                if (dirs.Length == 0 && files.Length == 0)
+                var entries = VFSManager.GetDirectoryListing(path);
+                Console.WriteLine("debug: entry count = " + (entries == null ? "null" : entries.Count.ToString()));
+
+                if (entries == null || entries.Count == 0)
                 {
                     Console.WriteLine("ls: " + path + " is empty");
                     return;
                 }
 
-                foreach (var dir in dirs)
-                    Console.WriteLine("[DIR] " + dir);
-
-                foreach (var file in files)
-                    Console.WriteLine(file);
+                foreach (var entry in entries)
+                {
+                    if (entry.mEntryType == Cosmos.System.FileSystem.Listing.DirectoryEntryTypeEnum.Directory)
+                        Console.WriteLine("[DIR] " + entry.mName);
+                    else
+                        Console.WriteLine("      " + entry.mName);
+                }
             }
-            catch
+            catch (Exception e)
             {
-                Console.WriteLine("ls: cannot access " + path);
+                Console.WriteLine("ls: " + e.Message);
             }
         }
     }
