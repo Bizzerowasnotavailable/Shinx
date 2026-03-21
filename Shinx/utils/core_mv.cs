@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-
 namespace Shinx.Commands
 {
     public class core_mv : ICommand
@@ -13,7 +12,15 @@ namespace Shinx.Commands
                 return;
             }
 
-            if (!File.Exists(args[0]))
+            string src = args[0];
+            string dst = args[1];
+
+            if (!src.StartsWith(@"0:\"))
+                src = @"0:\" + src;
+            if (!dst.StartsWith(@"0:\"))
+                dst = @"0:\" + dst;
+
+            if (!File.Exists(src))
             {
                 Console.WriteLine("mv: " + args[0] + ": no such file");
                 return;
@@ -21,14 +28,14 @@ namespace Shinx.Commands
 
             try
             {
-                byte[] data = File.ReadAllBytes(args[0]);
-                File.WriteAllBytes(args[1], data);
-                File.Delete(args[0]);
+                byte[] data = File.ReadAllBytes(src);
+                File.WriteAllBytes(dst, data);
+                File.Delete(src);
                 Console.WriteLine("moved " + args[0] + " to " + args[1]);
             }
-            catch
+            catch (Exception e)
             {
-                Console.WriteLine("mv: failed to move " + args[0]);
+                Console.WriteLine("mv: " + e.Message);
             }
         }
     }
