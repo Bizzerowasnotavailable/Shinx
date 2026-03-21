@@ -20,7 +20,8 @@ namespace Shinx.Commands
                 { "clear", new core_clear() },
                 { "ls", new core_ls() },
                 { "mv", new core_mv() },
-                { "mkdir", new core_mkdir() }
+                { "mkdir", new core_mkdir() },
+                { "cat", new core_cat() }
             };
         }
 

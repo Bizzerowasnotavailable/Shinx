@@ -1,0 +1,42 @@
+﻿using System;
+using System.IO;
+
+namespace Shinx.Commands
+{
+    public class core_cat : ICommand
+    {
+        public void Execute(string[] args)
+        {
+            if (args.Length < 1)
+            {
+                Console.WriteLine("usage: cat <file>");
+                return;
+            }
+
+            string path = args[0];
+
+            if (!path.StartsWith(@"0:\"))
+                path = @"0:\" + path;
+
+            if (!File.Exists(path))
+            {
+                Console.WriteLine("cat: " + args[0] + ": no such file");
+                return;
+            }
+
+            try
+            {
+                string[] content = File.ReadAllLines(path);
+                for(int i = 0; i < content.Length; i++)
+                {
+                    Console.WriteLine(content[i]);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"cat: {e.Message}");
+            }
+        }
+    }
+}
