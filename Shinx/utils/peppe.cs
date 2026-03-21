@@ -23,7 +23,8 @@ namespace Shinx.Commands
                 { "mkdir", new core_mkdir() },
                 { "cat", new core_cat() },
                 { "cd", new core_cd() },
-                { "edit", new core_edit() }
+                { "edit", new core_edit() },
+                { "rm", new core_rm() }
             };
         }
 
