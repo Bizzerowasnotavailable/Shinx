@@ -16,6 +16,7 @@ namespace Shinx.Commands
             Console.WriteLine("mv: move files");
             Console.WriteLine("mkdir: make directory");
             Console.WriteLine("cat: show contents of a file");
+            Console.WriteLine("cd: change directory");
         }
     }
 }

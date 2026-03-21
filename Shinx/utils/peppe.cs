@@ -21,7 +21,8 @@ namespace Shinx.Commands
                 { "ls", new core_ls() },
                 { "mv", new core_mv() },
                 { "mkdir", new core_mkdir() },
-                { "cat", new core_cat() }
+                { "cat", new core_cat() },
+                { "cd", new core_cd() }
             };
         }
 

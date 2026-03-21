@@ -30,7 +30,7 @@ namespace Shinx
 
         protected override void Run()
         {
-            Console.Write("@> ");
+            Console.Write(Shell.currentDirectory + ">");
             var input = Console.ReadLine();
 
             if (!string.IsNullOrEmpty(input))
