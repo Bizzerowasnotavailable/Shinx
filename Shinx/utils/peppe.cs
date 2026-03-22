@@ -24,7 +24,8 @@ namespace Shinx.Commands
                 { "cat", new core_cat() },
                 { "cd", new core_cd() },
                 { "edit", new core_edit() },
-                { "rm", new core_rm() }
+                { "rm", new core_rm() },
+                { "sha256sum", new core_sha256() }
             };
         }
 

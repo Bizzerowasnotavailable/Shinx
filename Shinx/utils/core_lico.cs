@@ -19,6 +19,7 @@ namespace Shinx.Commands
             Console.WriteLine("cd: change directory");
             Console.WriteLine("edit: basic text editor");
             Console.WriteLine("rm: delete file/directory");
+            Console.WriteLine("sha256sum: calculate sha256 hash of a string");
         }
     }
 }
