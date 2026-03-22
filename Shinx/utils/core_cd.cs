@@ -1,11 +1,12 @@
 ﻿using Cosmos.System.FileSystem.VFS;
 using System;
+using System.Collections.Generic;
 
 namespace Shinx.Commands
 {
     public class core_cd : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length < 1)
             {

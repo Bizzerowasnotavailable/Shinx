@@ -6,7 +6,7 @@ namespace Shinx.Commands
 {
     public class core_edit : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length < 1)
             {

@@ -1,10 +1,11 @@
-﻿using System;
-using Cosmos.Core;
+﻿using Cosmos.Core;
+using System;
+using System.Collections.Generic;
 namespace Shinx.Commands
 {
     public class uncore_fetch : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("                                     YXXXXXXY                            ");

@@ -1,35 +1,40 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 namespace Shinx.Commands
 {
     public class core_cp : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length < 2)
             {
                 Console.WriteLine("usage: cp [OPTIONS] <source> <destination>\nOPTIONS: -r: copy directories recursively");
                 return;
             }
-            if (args.Length > 2 && args[0] != "-r")
+
+            foreach (char p in parameters)
             {
-                Console.WriteLine($"Unknown option: {args[0]}");
-                return;
+                if (p != 'r')
+                {
+                    Console.WriteLine($"cp: unknown option: -{p}");
+                    return;
+                }
             }
+
             try
             {
-                if (args.Length > 2)
+                if (parameters.Contains('r'))
                 {
-                    args[2] = args[2].Replace(' ', '_');
-                    string src = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
-                    string dst = args[2].StartsWith(@"0:\") ? args[2] : Shell.currentDirectory + args[2];
+                    string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+                    string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
                     if (!Directory.Exists(src))
                     {
-                        Console.WriteLine("cp: " + args[1] + ": no such directory");
+                        Console.WriteLine("cp: " + args[0] + ": no such directory");
                         return;
                     }
                     CopyDirectory(src, dst);
-                    Console.WriteLine("copied " + args[1] + " to " + args[2]);
+                    Console.WriteLine("copied " + args[0] + " to " + args[1]);
                 }
                 else
                 {
@@ -50,6 +55,7 @@ namespace Shinx.Commands
                 Console.WriteLine($"cp: {e.Message}");
             }
         }
+
         private void CopyDirectory(string src, string dst)
         {
             Directory.CreateDirectory(dst);

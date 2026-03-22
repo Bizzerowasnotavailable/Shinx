@@ -1,48 +1,50 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Windows.Input;
-
 namespace Shinx.Commands
 {
     public class core_rm : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("usage: rm [OPTIONS] <target>\nOPTIONS: -r: remove directories and their contents recursively");
+                Console.WriteLine("usage: rm [OPTIONS] <target>\nOPTIONS: -r: remove directories recursively");
                 return;
             }
 
-            if (args.Length > 1 && args[0] != "-r")
+            foreach (char p in parameters)
             {
-                Console.WriteLine($"Unknown option: {args[0]}");
-                return;
+                if (p != 'r')
+                {
+                    Console.WriteLine($"rm: unknown option: -{p}");
+                    return;
+                }
             }
+
+            string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
 
             try
             {
-                if (args.Length > 1)
+                if (parameters.Contains('r'))
                 {
-                    string path = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
                     if (!Directory.Exists(path))
                     {
-                        Console.WriteLine("rm: unknown path");
+                        Console.WriteLine("rm: " + args[0] + ": no such directory");
                         return;
                     }
-
-                    Directory.Delete(path);
+                    Directory.Delete(path, true);
+                    Console.WriteLine("removed " + args[0]);
                 }
                 else
                 {
-                    string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
                     if (!File.Exists(path))
                     {
-                        Console.WriteLine("rm: unknown path");
+                        Console.WriteLine("rm: " + args[0] + ": no such file");
                         return;
                     }
-
                     File.Delete(path);
+                    Console.WriteLine("removed " + args[0]);
                 }
             }
             catch (Exception e)

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Shinx.Commands
 {
     public class core_lico : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             Console.WriteLine("echo: display a message in the terminal");
             Console.WriteLine("lico: list commands");
