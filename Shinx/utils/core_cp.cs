@@ -20,6 +20,7 @@ namespace Shinx.Commands
             {
                 if (args.Length > 2)
                 {
+                    args[2] = args[2].Replace(' ', '_');
                     string src = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
                     string dst = args[2].StartsWith(@"0:\") ? args[2] : Shell.currentDirectory + args[2];
                     if (!Directory.Exists(src))

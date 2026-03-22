@@ -30,19 +30,45 @@ namespace Shinx.Commands
 
         public void Execute(string input)
         {
-            string[] parts = input.Split(' ');
+            List<string> parts = new List<string>();
+            string current = "";
+            bool inQuotes = false;
+
+            foreach (char c in input)
+            {
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ' ' && !inQuotes)
+                {
+                    if (current.Length > 0)
+                    {
+                        parts.Add(current);
+                        current = "";
+                    }
+                }
+                else
+                {
+                    current += c;
+                }
+            }
+
+            if (current.Length > 0)
+                parts.Add(current);
+
+            if (parts.Count == 0)
+                return;
+
             string commandName = parts[0].ToLower();
-            string[] args = new string[parts.Length - 1];
-            Array.Copy(parts, 1, args, 0, parts.Length - 1);
+            string[] args = new string[parts.Count - 1];
+            for (int i = 1; i < parts.Count; i++)
+                args[i - 1] = parts[i];
 
             if (commands.ContainsKey(commandName))
-            {
                 commands[commandName].Execute(args);
-            }
             else
-            {
                 Console.WriteLine($"command not found, what exactly is {commandName} ?? ");
-            }
         }
     }
 }
