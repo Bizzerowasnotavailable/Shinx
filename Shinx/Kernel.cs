@@ -1,5 +1,4 @@
-﻿
-// I FUCKING FIGURED OUT HOW TO RUN THIS SHI WITHOUT VMWARE YIPEEE
+﻿// I FUCKING FIGURED OUT HOW TO RUN THIS SHI WITHOUT VMWARE YIPEEE
 // SHOUTOUT TO HIRPUS LAB
 
 using Cosmos.System.Graphics;
@@ -33,9 +32,7 @@ namespace Shinx
                     Console.Write("login: ");
                     string username = Console.ReadLine();
                     Console.Write("password: ");
-                    Console.ForegroundColor = ConsoleColor.Black;
-                    string password = Console.ReadLine();
-                    Console.ForegroundColor = ConsoleColor.White;
+                    string password = ReadPassword();
 
                     if (UserManager.Login(username, password))
                     {
@@ -69,6 +66,31 @@ namespace Shinx
             {
                 commandHandler.Execute(input);
             }
+        }
+
+        private string ReadPassword()
+        {
+            string password = "";
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    Console.WriteLine();
+                    break;
+                }
+                else if (key.Key == ConsoleKey.Backspace)
+                {
+                    if (password.Length > 0)
+                        password = password.Remove(password.Length - 1, 1);
+                }
+                else if (key.KeyChar >= 32)
+                {
+                    password += key.KeyChar;
+                }
+            }
+            return password;
         }
     }
 }
