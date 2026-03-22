@@ -23,7 +23,7 @@ namespace Shinx
             VFSManager.RegisterVFS(vfs);
             UserManager.Init();
             commandHandler = new peppe();
-            Console.WriteLine("SHINX booted successfully, keep in mind, this is PRE-ALPHA software :3");
+            Console.WriteLine("[OK] Boot successful");
 
             while (true)
             {
@@ -33,7 +33,9 @@ namespace Shinx
                     Console.Write("login: ");
                     string username = Console.ReadLine();
                     Console.Write("password: ");
+                    Console.ForegroundColor = ConsoleColor.Black;
                     string password = Console.ReadLine();
+                    Console.ForegroundColor = ConsoleColor.White;
 
                     if (UserManager.Login(username, password))
                     {

@@ -48,8 +48,9 @@ namespace Shinx.Commands
         {
             try
             {
-                ulong memorySize = CPU.GetAmountOfRAM();
-                return (memorySize / 1024 / 1024) + " MB";
+                ulong total = Cosmos.Core.GCImplementation.GetAvailableRAM();
+                ulong used = Cosmos.Core.GCImplementation.GetUsedRAM() / 1024 / 1024;
+                return used + " MB used / " + total + " MB total";
             }
             catch
             {
