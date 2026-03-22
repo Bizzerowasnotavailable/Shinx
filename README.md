@@ -8,9 +8,9 @@ An hobby operating system built on [Cosmos](https://github.com/CosmosOS/Cosmos)
 - echo
 - system information fetch program
 - cp mv and ls
+- user system
 - FAT filesystem
 - rm command
-# ⚠THIS IS CURRENTLY PRE-ALPHA SOFTWARE⚠
 
 ## compiling instructions
 
