@@ -26,6 +26,7 @@ namespace Shinx.Commands
             Console.WriteLine("passwd: change user password");
             Console.WriteLine("whoami: prints current user's username");
             Console.WriteLine("exit: logout");
+            Console.WriteLine("su: switch user");
         }
     }
 }

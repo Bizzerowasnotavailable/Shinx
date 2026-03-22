@@ -30,7 +30,8 @@ namespace Shinx.Commands
                 { "userdel", new core_userdel() },
                 { "passwd", new core_passwd() },
                 { "whoami", new core_whoami() },
-                { "exit", new core_exit() }
+                { "exit", new core_exit() },
+                { "su", new core_su() }
             };
         }
 

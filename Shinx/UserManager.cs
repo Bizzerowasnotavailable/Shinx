@@ -9,6 +9,7 @@ namespace Shinx
     {
         private static Dictionary<string, string> users = new Dictionary<string, string>();
         public static string currentUser = "";
+        private static string savedUser = "";
         private static string usersFile = @"0:\users.txt";
 
         public static void Init()
@@ -47,7 +48,7 @@ namespace Shinx
 
         public static bool Login(string username, string password)
         {
-            if (users.ContainsKey(username) && users[username] == core_sha256.Hash(password))
+            if (users.ContainsKey(username) && users[username].Equals(core_sha256.Hash(password)))
             {
                 currentUser = username;
                 return true;
@@ -80,7 +81,8 @@ namespace Shinx
 
         public static void Logout()
         {
-            currentUser = "";
+            currentUser = savedUser;
+            savedUser = "";
         }
 
         public static void ChangeUserPass(string username, string password)
@@ -94,6 +96,12 @@ namespace Shinx
             if (users.ContainsKey(username))
                 return users[username];
             return null;
+        }
+
+        public static void SwitchUser(string username, string password)
+        {
+            savedUser = currentUser;
+            Login(username, password);
         }
     }
 }
