@@ -19,6 +19,7 @@ namespace Shinx.utils
                 return;
             }
 
+            args[0] = args[0].Replace(' ', '_');
             string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
 
             try
