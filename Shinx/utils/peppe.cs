@@ -32,26 +32,35 @@ namespace Shinx.Commands
         public void Execute(string input)
         {
             List<string> parts = new List<string>();
+            HashSet<char> parameters = new HashSet<char>();
             string current = "";
             bool inQuotes = false;
+            bool inParam = false;
 
             foreach (char c in input)
             {
-                if (c == '"')
+                switch (c)
                 {
-                    inQuotes = !inQuotes;
-                }
-                else if (c == ' ' && !inQuotes)
-                {
-                    if (current.Length > 0)
-                    {
-                        parts.Add(current);
-                        current = "";
-                    }
-                }
-                else
-                {
-                    current += c;
+                    case '"':
+                        inQuotes = !inQuotes;
+                        break;
+                    case ' ' when !inQuotes:
+                        if (current.Length > 0)
+                        {
+                            parts.Add(current);
+                            current = "";
+                        }
+                        inParam = false;
+                        break;
+                    case '-' when !inQuotes:
+                        inParam = true;
+                        break;
+                    default:
+                        if (inParam)
+                            parameters.Add(c);
+                        else
+                            current += c;
+                        break;
                 }
             }
 
@@ -67,7 +76,7 @@ namespace Shinx.Commands
                 args[i - 1] = parts[i];
 
             if (commands.ContainsKey(commandName))
-                commands[commandName].Execute(args);
+                commands[commandName].Execute(args, parameters);
             else
                 Console.WriteLine($"command not found, what exactly is {commandName} ?? ");
         }

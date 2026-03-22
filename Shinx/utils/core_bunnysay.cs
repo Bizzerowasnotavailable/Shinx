@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 namespace Shinx.Commands
 {
     public class core_bunnysay : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length == 0)
             {

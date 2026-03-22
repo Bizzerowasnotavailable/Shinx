@@ -1,8 +1,10 @@
-﻿namespace Shinx.Commands
+﻿using System.Collections.Generic;
+
+namespace Shinx.Commands
 {
     public interface ICommand
     {
-        void Execute(string[] args);
+        void Execute(string[] args, HashSet<char> parameters);
     }
 }
 

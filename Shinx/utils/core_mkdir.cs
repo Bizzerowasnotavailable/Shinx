@@ -3,46 +3,32 @@ using Shinx.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-// TODO: refactor
 
 namespace Shinx.utils
 {
     public class core_mkdir : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             if (args.Length < 1)
-            {
-                Console.WriteLine("usage: mkdir <directory>");
-                return;
-            }
-
-            // creating -p argument (might be broken)
-            // update: it wasn't broken lmao
-            bool createParents = false;
-            string dirArg = null;
-
-            foreach (var arg in args)
-            {
-                if (arg == "-p")
-                    createParents = true;
-                else
-                    dirArg = arg;
-            }
-
-            if (dirArg == null)
             {
                 Console.WriteLine("usage: mkdir [-p] <directory>");
                 return;
             }
 
-            dirArg = dirArg.Replace(' ', '_');
-            string fullPath = dirArg.StartsWith(@"0:\") ? dirArg : Shell.currentDirectory + dirArg;
+            foreach (char p in parameters)
+            {
+                if (p != 'p')
+                {
+                    Console.WriteLine($"mkdir: unknown option: -{p}");
+                    return;
+                }
+            }
 
+            // i got you dont worry
+            bool createParents = parameters.Contains('p');
+            string dirArg = args[0].Replace(' ', '_');
+            string fullPath = dirArg.StartsWith(@"0:\") ? dirArg : Shell.currentDirectory + dirArg;
             fullPath = fullPath.Replace('/', '\\');
 
             try
@@ -52,6 +38,7 @@ namespace Shinx.utils
                     Console.WriteLine("mkdir: directory already exists: " + dirArg);
                     return;
                 }
+
                 if (createParents)
                 {
                     CreateRecursive(fullPath);
@@ -82,7 +69,6 @@ namespace Shinx.utils
             {
                 parts.Insert(0, current);
                 string parent = Path.GetDirectoryName(current);
-
                 if (parent == current || string.IsNullOrEmpty(parent))
                     break;
                 current = parent;
@@ -90,9 +76,7 @@ namespace Shinx.utils
             foreach (var segment in parts)
             {
                 if (!Directory.Exists(segment))
-                {
                     Directory.CreateDirectory(segment);
-                }
             }
         }
     }

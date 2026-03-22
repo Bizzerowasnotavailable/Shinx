@@ -1,11 +1,12 @@
 using Cosmos.System.FileSystem.VFS;
 using System;
+using System.Collections.Generic;
 
 namespace Shinx.Commands
 {
     public class core_ls : ICommand
     {
-        public void Execute(string[] args)
+        public void Execute(string[] args, HashSet<char> parameters)
         {
             string path = args.Length > 0 ? (args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0]) : Shell.currentDirectory;
 
