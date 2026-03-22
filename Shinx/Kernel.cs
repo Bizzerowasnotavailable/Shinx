@@ -23,9 +23,9 @@ namespace Shinx
             VFSManager.RegisterVFS(vfs);
 
             commandHandler = new peppe();
+            commandHandler.Execute("fetch");
             Console.WriteLine("SHINX booted successfully, keep in mind, this is PRE-ALPHA software :3");
             Console.WriteLine("type lico for a list of commands");
-            commandHandler.Execute("fetch");
         }
 
         protected override void Run()
