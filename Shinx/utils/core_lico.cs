@@ -21,6 +21,11 @@ namespace Shinx.Commands
             Console.WriteLine("edit: basic text editor");
             Console.WriteLine("rm: delete file/directory");
             Console.WriteLine("sha256sum: calculate sha256 hash of a string");
+            Console.WriteLine("useradd: add new user");
+            Console.WriteLine("userdel: delete user");
+            Console.WriteLine("passwd: change user password");
+            Console.WriteLine("whoami: prints current user's username");
+            Console.WriteLine("exit: logout");
         }
     }
 }

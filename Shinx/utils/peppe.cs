@@ -25,7 +25,12 @@ namespace Shinx.Commands
                 { "cd", new core_cd() },
                 { "edit", new core_edit() },
                 { "rm", new core_rm() },
-                { "sha256sum", new core_sha256() }
+                { "sha256sum", new core_sha256() },
+                { "useradd", new core_useradd() },
+                { "userdel", new core_userdel() },
+                { "passwd", new core_passwd() },
+                { "whoami", new core_whoami() },
+                { "exit", new core_exit() }
             };
         }
 
