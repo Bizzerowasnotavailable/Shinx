@@ -37,7 +37,8 @@ namespace Shinx.Commands
                 { "groupmod", new core_groupmod() },
                 { "groups", new core_groups() },
                 { "chown", new core_chown() },
-                { "chgrp", new core_chgrp() }
+                { "chgrp", new core_chgrp() },
+                { "lua", new core_lua() }
             };
         }
 
