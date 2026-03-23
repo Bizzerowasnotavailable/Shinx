@@ -19,17 +19,7 @@ namespace Shinx.Commands
             {
                 ILuaState lua = LuaAPI.NewState();
 
-                lua.L_RequireF("_G", LuaBaseLib.OpenLib, true);
-                lua.Pop(1);
-
-                lua.L_RequireF("table", LuaTableLib.OpenLib, true);
-                lua.Pop(1);
-
-                lua.L_RequireF("string", LuaStrLib.OpenLib, true);
-                lua.Pop(1);
-
-                lua.L_RequireF("math", LuaMathLib.OpenLib, true);
-                lua.Pop(1);
+                lua.L_OpenLibs();
 
                 string input = args[0];
 
