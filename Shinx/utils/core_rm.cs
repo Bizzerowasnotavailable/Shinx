@@ -24,6 +24,12 @@ namespace Shinx.Commands
 
             string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
 
+            if (!PermissionManager.CanAccess(path, UserManager.currentUser))
+            {
+                Console.WriteLine("rm: permission denied: " + args[0]);
+                return;
+            }
+
             try
             {
                 if (parameters.Contains('r'))

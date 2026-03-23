@@ -40,7 +40,7 @@ namespace Shinx.Commands
                     UserManager.ChangeUserPass(args[0], args[2]);
                     Console.WriteLine("passwd: password changed successfully");
                 }
-                else if (UserManager.currentUser == "root")
+                else if (UserManager.IsRoot(UserManager.currentUser))
                 {
                     if (args[0] == "root")
                     {

@@ -15,6 +15,13 @@ namespace Shinx.Commands
             }
 
             string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+
+            if (File.Exists(path) && !PermissionManager.CanAccess(path, UserManager.currentUser))
+            {
+                Console.WriteLine("edit: permission denied: " + args[0]);
+                return;
+            }
+
             List<string> lines = new List<string>();
 
             if (File.Exists(path))
@@ -64,6 +71,7 @@ namespace Shinx.Commands
                             return;
                         case ":w":
                             File.WriteAllLines(path, lines.ToArray());
+                            PermissionManager.SetDefault(path, UserManager.currentUser);
                             Console.WriteLine("saved " + args[0]);
                             break;
                         case ":p":

@@ -19,7 +19,7 @@ namespace Shinx.Commands
                 {
                     Console.WriteLine("userdel: cannot delete current user.");
                 } 
-                else if(args[0] != "root" && UserManager.currentUser == "root")
+                else if(args[0] != "root" && UserManager.IsRoot(UserManager.currentUser))
                 {
                     if (!UserManager.UserExists(args[0]))
                     {

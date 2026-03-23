@@ -28,6 +28,16 @@ namespace Shinx.Commands
                 {
                     string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
                     string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+                    if (!PermissionManager.CanAccess(src, UserManager.currentUser))
+                    {
+                        Console.WriteLine("mv: permission denied: " + args[0]);
+                        return;
+                    }
+                    if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
+                    {
+                        Console.WriteLine("mv: permission denied: " + args[1]);
+                        return;
+                    }
                     if (!Directory.Exists(src))
                     {
                         Console.WriteLine("cp: " + args[0] + ": no such directory");
@@ -40,6 +50,16 @@ namespace Shinx.Commands
                 {
                     string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
                     string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+                    if (!PermissionManager.CanAccess(src, UserManager.currentUser))
+                    {
+                        Console.WriteLine("mv: permission denied: " + args[0]);
+                        return;
+                    }
+                    if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
+                    {
+                        Console.WriteLine("mv: permission denied: " + args[1]);
+                        return;
+                    }
                     if (!File.Exists(src))
                     {
                         Console.WriteLine("cp: " + args[0] + ": no such file");
@@ -64,6 +84,7 @@ namespace Shinx.Commands
                 string fullFilePath = src.TrimEnd('\\') + '\\' + file;
                 string destFile = dst.TrimEnd('\\') + '\\' + file;
                 File.WriteAllBytes(destFile, File.ReadAllBytes(fullFilePath));
+                PermissionManager.SetDefault(destFile, UserManager.currentUser);
                 Console.WriteLine("copied " + fullFilePath + " to " + destFile);
             }
             foreach (var dir in Directory.GetDirectories(src))
