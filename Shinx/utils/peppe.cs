@@ -31,7 +31,13 @@ namespace Shinx.Commands
                 { "passwd", new core_passwd() },
                 { "whoami", new core_whoami() },
                 { "exit", new core_exit() },
-                { "su", new core_su() }
+                { "su", new core_su() },
+                { "groupadd", new core_groupadd() },
+                { "groupdel", new core_groupdel() },
+                { "groupmod", new core_groupmod() },
+                { "groups", new core_groups() },
+                { "chown", new core_chown() },
+                { "chgrp", new core_chgrp() }
             };
         }
 

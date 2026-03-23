@@ -27,6 +27,12 @@ namespace Shinx.Commands
             Console.WriteLine("whoami: prints current user's username");
             Console.WriteLine("exit: logout");
             Console.WriteLine("su: switch user");
+            Console.WriteLine("groupadd: create a new group");
+            Console.WriteLine("groupdel: delete a group");
+            Console.WriteLine("groupmod: add/remove user from group");
+            Console.WriteLine("groups: list groups for a user");
+            Console.WriteLine("chown: change owner of a file/directory");
+            Console.WriteLine("chgrp: change group of a file/directory");
         }
     }
 }

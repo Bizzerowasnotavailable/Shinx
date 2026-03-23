@@ -31,6 +31,12 @@ namespace Shinx.utils
             string fullPath = dirArg.StartsWith(@"0:\") ? dirArg : Shell.currentDirectory + dirArg;
             fullPath = fullPath.Replace('/', '\\');
 
+            if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
+            {
+                Console.WriteLine("mkdir: permission denied");
+                return;
+            }
+
             try
             {
                 if (Directory.Exists(fullPath))
@@ -53,6 +59,7 @@ namespace Shinx.utils
                         return;
                     }
                     Directory.CreateDirectory(fullPath);
+                    PermissionManager.SetDefault(fullPath, UserManager.currentUser);
                 }
             }
             catch (Exception e)

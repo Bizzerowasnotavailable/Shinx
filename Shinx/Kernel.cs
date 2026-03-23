@@ -1,13 +1,14 @@
 ﻿// I FUCKING FIGURED OUT HOW TO RUN THIS SHI WITHOUT VMWARE YIPEEE
 // SHOUTOUT TO HIRPUS LAB
 
+using Cosmos.System.FileSystem;
+using Cosmos.System.FileSystem.VFS;
 using Cosmos.System.Graphics;
 using IL2CPU.API.Attribs;
 using Shinx.Commands;
 using System;
+using System.IO;
 using Sys = Cosmos.System;
-using Cosmos.System.FileSystem;
-using Cosmos.System.FileSystem.VFS;
 
 namespace Shinx
 {
@@ -20,7 +21,14 @@ namespace Shinx
         {
             vfs = new CosmosVFS();
             VFSManager.RegisterVFS(vfs);
+
+            if (!Directory.Exists(@"0:\sys"))
+                Directory.CreateDirectory(@"0:\sys");
+            if (!Directory.Exists(@"0:\home"))
+                Directory.CreateDirectory(@"0:\home");
+
             UserManager.Init();
+            PermissionManager.Init();
             commandHandler = new peppe();
             Console.WriteLine("[OK] Boot successful");
 

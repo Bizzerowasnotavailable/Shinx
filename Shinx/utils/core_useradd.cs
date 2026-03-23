@@ -12,7 +12,7 @@ namespace Shinx.Commands
                 return;
             }
 
-            if (UserManager.currentUser != "root")
+            if (!UserManager.IsRoot(UserManager.currentUser))
             {
                 Console.WriteLine("useradd: no permission");
                 return;
