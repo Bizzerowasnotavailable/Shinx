@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Shinx
 {
     public static class Shell
     {
         public static string currentDirectory = @"0:\";
+        public static List<string> history = new List<string>();
 
         public static void returnDirectory()
         {

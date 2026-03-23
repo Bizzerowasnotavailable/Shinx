@@ -68,12 +68,112 @@ namespace Shinx
         protected override void Run()
         {
             Console.Write(UserManager.currentUser + "@" + Shell.currentDirectory + "> ");
-            var input = Console.ReadLine();
-
+            string input = ReadLine();
             if (!string.IsNullOrEmpty(input))
             {
+                Shell.history.Add(input);
                 commandHandler.Execute(input);
             }
+        }
+
+        private int historyIndex = -1;
+
+        private string ReadLine()
+        {
+            string input = "";
+            int cursorPos = 0;
+            historyIndex = Shell.history.Count;
+
+            while (true)
+            {
+                ConsoleKeyInfo key = Console.ReadKey(true);
+
+                switch (key.Key)
+                {
+                    case ConsoleKey.Enter:
+                        Console.WriteLine();
+                        return input;
+
+                    case ConsoleKey.Backspace:
+                        if (cursorPos > 0)
+                        {
+                            input = input.Substring(0, cursorPos - 1) + input.Substring(cursorPos);
+                            cursorPos--;
+                            RedrawInput(input, cursorPos);
+                        }
+                        break;
+
+                    case ConsoleKey.UpArrow:
+                        if (historyIndex > 0)
+                        {
+                            historyIndex--;
+                            input = Shell.history[historyIndex];
+                            cursorPos = input.Length;
+                            RedrawInput(input, cursorPos);
+                        }
+                        break;
+
+                    case ConsoleKey.DownArrow:
+                        if (historyIndex < Shell.history.Count - 1)
+                        {
+                            historyIndex++;
+                            input = Shell.history[historyIndex];
+                            cursorPos = input.Length;
+                            RedrawInput(input, cursorPos);
+                        }
+                        else
+                        {
+                            historyIndex = Shell.history.Count;
+                            input = "";
+                            cursorPos = 0;
+                            RedrawInput(input, cursorPos);
+                        }
+                        break;
+
+                    case ConsoleKey.LeftArrow:
+                        if (cursorPos > 0)
+                        {
+                            cursorPos--;
+                            Console.CursorLeft = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length + cursorPos;
+                        }
+                        break;
+
+                    case ConsoleKey.RightArrow:
+                        if (cursorPos < input.Length)
+                        {
+                            cursorPos++;
+                            Console.CursorLeft = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length + cursorPos;
+                        }
+                        break;
+
+                    case ConsoleKey.C when key.Modifiers == ConsoleModifiers.Control:
+                        input = "";
+                        cursorPos = 0;
+                        historyIndex = Shell.history.Count;
+                        Console.WriteLine("^C");
+                        Console.Write(UserManager.currentUser + "@" + Shell.currentDirectory + "> ");
+                        break;
+
+                    default:
+                        if (key.KeyChar != '\0')
+                        {
+                            input = input.Substring(0, cursorPos) + key.KeyChar + input.Substring(cursorPos);
+                            cursorPos++;
+                            RedrawInput(input, cursorPos);
+                        }
+                        break;
+                }
+            }
+        }
+
+        private void RedrawInput(string input, int cursorPos)
+        {
+            int promptLen = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length;
+            Console.CursorLeft = promptLen;
+            Console.Write(new string(' ', Console.WindowWidth - promptLen - 1));
+            Console.CursorLeft = promptLen;
+            Console.Write(input);
+            Console.CursorLeft = promptLen + cursorPos;
         }
 
         private string ReadPassword()
