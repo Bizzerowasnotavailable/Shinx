@@ -16,7 +16,7 @@ namespace Shinx
 {
     public class Kernel : Sys.Kernel
     {
-        [ManifestResourceStream(ResourceName = "Shinx.Luautils.fetch.lua")]
+        [ManifestResourceStream(ResourceName = "Shinx.LuaUtils.fetch.lua")]
         static byte[] fetchLua;
 
         public static peppe commandHandler;

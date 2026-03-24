@@ -24,11 +24,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="Luautils\fetch.lua" />
+      <None Remove="LuaUtils\fetch.lua" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Luautils\fetch.lua" />
+      <EmbeddedResource Include="LuaUtils\fetch.lua" />
     </ItemGroup>
 
     <ItemGroup>
