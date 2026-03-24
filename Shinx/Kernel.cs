@@ -3,18 +3,17 @@
 
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
-using Cosmos.System.Graphics;
-using IL2CPU.API.Attribs;
 using Shinx.Commands;
 using System;
 using System.IO;
+using UniLua;
 using Sys = Cosmos.System;
 
 namespace Shinx
 {
     public class Kernel : Sys.Kernel
     {
-        private peppe commandHandler;
+        public static peppe commandHandler;
         private CosmosVFS vfs;
 
         protected override void BeforeRun()
@@ -26,6 +25,10 @@ namespace Shinx
                 Directory.CreateDirectory(@"0:\sys");
             if (!Directory.Exists(@"0:\home"))
                 Directory.CreateDirectory(@"0:\home");
+            if (!Directory.Exists(@"0:\etc"))
+                Directory.CreateDirectory(@"0:\etc");
+            if (!Directory.Exists(@"0:\bin"))
+                Directory.CreateDirectory(@"0:\bin");
 
             UserManager.Init();
             PermissionManager.Init();
@@ -44,12 +47,25 @@ namespace Shinx
 
                     if (UserManager.Login(username, password))
                     {
-                        Console.WriteLine("welcome " + username);
+                        Console.WriteLine($"welcome {username}");
                         loggedIn = true;
                     }
                     else
                     {
                         Console.WriteLine("login incorrect");
+                    }
+                }
+
+                LuaBridge.Init();
+                LuaBridge.ScanBin();
+
+                if (File.Exists(@"0:\etc\init.lua"))
+                {
+                    var status = LuaBridge.State.L_DoString(File.ReadAllText(@"0:\etc\init.lua"));
+                    if (status != ThreadStatus.LUA_OK)
+                    {
+                        Console.WriteLine("init.lua error: " + LuaBridge.State.L_ToString(-1));
+                        LuaBridge.State.Pop(1);
                     }
                 }
 

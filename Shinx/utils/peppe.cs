@@ -6,7 +6,8 @@ namespace Shinx.Commands
 {
     public class peppe // le funny name
     {
-        private Dictionary<string, ICommand> commands; // implements the commandname commanddothings structure
+        public static Dictionary<string, string> descriptions = new Dictionary<string, string>();
+        public static Dictionary<string, ICommand> commands; // implements the commandname commanddothings structure
 
         public peppe()
         {
@@ -92,6 +93,11 @@ namespace Shinx.Commands
                 commands[commandName].Execute(args, parameters);
             else
                 Console.WriteLine($"command not found, what exactly is {commandName} ?? ");
+        }
+        public static void RegisterCommand(string name, ICommand command, string desc = "lua command")
+        {
+            commands[name] = command;
+            descriptions[name] = desc;
         }
     }
 }

@@ -33,6 +33,9 @@ namespace Shinx.Commands
             Console.WriteLine("groups: list groups for a user");
             Console.WriteLine("chown: change owner of a file/directory");
             Console.WriteLine("chgrp: change group of a file/directory");
+            Console.WriteLine("lua: lua interpreter");
+            foreach (var d in peppe.descriptions)
+                Console.WriteLine(d.Key + ": " + d.Value);
         }
     }
 }
