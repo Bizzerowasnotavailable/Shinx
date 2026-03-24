@@ -2,9 +2,9 @@
     local args = shinx.args()
 
     if #args == 0 then
-        shinx.print("bunnysay")
-        shinx.print("like cowsay, but way worse, now on SHINX")
-        shinx.print("usage: bunnysay <message>")
+        shinx.writeline("bunnysay")
+        shinx.writeline("like cowsay, but way worse, now on SHINX")
+        shinx.writeline("usage: bunnysay <message>")
         return
     end
 
@@ -14,12 +14,12 @@
     -- logic for the textbox that dynamically changes in size
     local line = string.rep("-", length + 4)
 
-    shinx.print(line)
-    shinx.print("| " .. input .. " |")
-    shinx.print(line)
-    shinx.print("^ ^      ||")
-    shinx.print("(0w0) <3 ||")
-    shinx.print("/> >|    ||")
-    shinx.print(" ")
-    shinx.print("by Bizzero") -- removed the year cuz yeah
+    shinx.writeline(line)
+    shinx.writeline("| " .. input .. " |")
+    shinx.writeline(line)
+    shinx.writeline("^ ^      ||")
+    shinx.writeline("(0w0) <3 ||")
+    shinx.writeline("/> >|    ||")
+    shinx.writeline(" ")
+    shinx.writeline("by Bizzero") -- removed the year cuz yeah
 end, "port of bunnysay utility")

@@ -29,8 +29,11 @@ namespace Shinx
             // create shinx table
             State.NewTable();
 
-            State.PushCSharpFunction(L_Print);
-            State.SetField(-2, "print");
+            State.PushCSharpFunction(L_WriteLine);
+            State.SetField(-2, "writeline");
+
+            State.PushCSharpFunction(L_Write);
+            State.SetField(-2, "write");
 
             State.PushCSharpFunction(L_Clear);
             State.SetField(-2, "clear");
@@ -110,6 +113,24 @@ namespace Shinx
             State.PushCSharpFunction(L_RAMInfo);
             State.SetField(-2, "fetchram");
 
+            State.PushCSharpFunction(L_Sleep);
+            State.SetField(-2, "sleep");
+
+            State.PushCSharpFunction(L_SetCursor);
+            State.SetField(-2, "setcursor");
+
+            State.PushCSharpFunction(L_HasKey); 
+            State.SetField(-2, "haskey");
+
+            State.PushCSharpFunction(L_GetKey); 
+            State.SetField(-2, "getkey");
+
+            State.PushCSharpFunction(L_HideCursor);
+            State.SetField(-2, "hidecursor");
+
+            State.PushCSharpFunction(L_ShowCursor);
+            State.SetField(-2, "showcursor");
+
             State.SetGlobal("shinx");
         }
 
@@ -120,12 +141,16 @@ namespace Shinx
                 path = Shell.currentDirectory + path;
             return path;
         }
-        private static int L_Print(ILuaState lua)
+        private static int L_WriteLine(ILuaState lua)
         {
             Console.WriteLine(lua.L_ToString(1));
             return 0;
         }
-
+        private static int L_Write(ILuaState lua)
+        {
+            Console.Write(lua.L_ToString(1));
+            return 0;
+        }
         private static int L_Clear(ILuaState lua)
         {
             Console.Clear();
@@ -543,6 +568,50 @@ namespace Shinx
             }
             lua.PushString(ram);
             return 1;
+        }
+        private static int L_Sleep(ILuaState lua)
+        {
+            int ms = lua.L_CheckInteger(1);
+            System.Threading.Thread.Sleep(ms);
+            return 0;
+        }
+        private static int L_SetCursor(ILuaState lua)
+        {
+            int x = lua.L_CheckInteger(1);
+            int y = lua.L_CheckInteger(2);
+            Console.SetCursorPosition(x, y);
+            return 0;
+        }
+
+        private static int L_HasKey(ILuaState lua)
+        {
+            lua.PushBoolean(Console.KeyAvailable);
+            return 1;
+        }
+
+        private static int L_GetKey(ILuaState lua)
+        {
+            if (Console.KeyAvailable)
+            {
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                lua.PushString(key.KeyChar.ToString());
+            }
+            else
+            {
+                lua.PushNil();
+            }
+            return 1;
+        }
+        private static int L_HideCursor(ILuaState lua)
+        {
+            Console.CursorVisible = false;
+            return 0;
+        }
+
+        private static int L_ShowCursor(ILuaState lua)
+        {
+            Console.CursorVisible = true;
+            return 0;
         }
         public static void SetArgs(string[] args)
         {

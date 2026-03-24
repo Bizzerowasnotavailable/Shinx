@@ -16,9 +16,6 @@ namespace Shinx
 {
     public class Kernel : Sys.Kernel
     {
-        [ManifestResourceStream(ResourceName = "Shinx.LuaUtils.fetch.lua")]
-        static byte[] fetchLua;
-
         public static peppe commandHandler;
         private CosmosVFS vfs;
 
