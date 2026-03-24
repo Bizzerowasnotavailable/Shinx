@@ -27,19 +27,8 @@ namespace Shinx
             vfs = new CosmosVFS();
             VFSManager.RegisterVFS(vfs);
 
-            if (!Directory.Exists(@"0:\sys"))
-                Directory.CreateDirectory(@"0:\sys");
-            if (!Directory.Exists(@"0:\home"))
-                Directory.CreateDirectory(@"0:\home");
-            if (!Directory.Exists(@"0:\etc"))
-                Directory.CreateDirectory(@"0:\etc");
-            if (!Directory.Exists(@"0:\bin"))
-                Directory.CreateDirectory(@"0:\bin");
-            if (!File.Exists(@"0:\bin\fetch.lua"))
-            {
-                string content = System.Text.Encoding.UTF8.GetString(fetchLua);
-                File.WriteAllText(@"0:\bin\fetch.lua", content);
-            }
+            FSManager.Init();
+            FSManager.DeployLuaFiles();
 
             UserManager.Init();
             PermissionManager.Init();

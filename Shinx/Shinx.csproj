@@ -24,10 +24,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="LuaUtils\bunnysay.lua" />
       <None Remove="LuaUtils\fetch.lua" />
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="LuaUtils\bunnysay.lua" />
       <EmbeddedResource Include="LuaUtils\fetch.lua" />
     </ItemGroup>
 

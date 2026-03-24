@@ -9,7 +9,6 @@ namespace Shinx.Commands
         {
             Console.WriteLine("echo: display a message in the terminal");
             Console.WriteLine("lico: list commands");
-            Console.WriteLine("bunnysay: port of bunnysay utility");
             Console.WriteLine("clear: clear the terminal");
             Console.WriteLine("ls: list files in a directory");
             Console.WriteLine("cp: copy files");

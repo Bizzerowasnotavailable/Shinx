@@ -15,7 +15,6 @@ namespace Shinx.Commands
             {
                 { "echo", new core_echo() },
                 { "lico", new core_lico() },
-                { "bunnysay", new core_bunnysay() },
                 { "cp", new core_cp() },
                 { "clear", new core_clear() },
                 { "ls", new core_ls() },
