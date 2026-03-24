@@ -3,16 +3,22 @@
 
 using Cosmos.System.FileSystem;
 using Cosmos.System.FileSystem.VFS;
+using IL2CPU.API.Attribs;
 using Shinx.Commands;
 using System;
 using System.IO;
 using UniLua;
 using Sys = Cosmos.System;
 
+
+
 namespace Shinx
 {
     public class Kernel : Sys.Kernel
     {
+        [ManifestResourceStream(ResourceName = "Shinx.Luautils.fetch.lua")]
+        static byte[] fetchLua;
+
         public static peppe commandHandler;
         private CosmosVFS vfs;
 
@@ -29,6 +35,11 @@ namespace Shinx
                 Directory.CreateDirectory(@"0:\etc");
             if (!Directory.Exists(@"0:\bin"))
                 Directory.CreateDirectory(@"0:\bin");
+            if (!File.Exists(@"0:\bin\fetch.lua"))
+            {
+                string content = System.Text.Encoding.UTF8.GetString(fetchLua);
+                File.WriteAllText(@"0:\bin\fetch.lua", content);
+            }
 
             UserManager.Init();
             PermissionManager.Init();

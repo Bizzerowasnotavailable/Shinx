@@ -104,6 +104,12 @@ namespace Shinx
             State.PushCSharpFunction(L_GetOwner);
             State.SetField(-2, "getowner");
 
+            State.PushCSharpFunction(L_CPUInfo);
+            State.SetField(-2, "fetchcpu");
+
+            State.PushCSharpFunction(L_RAMInfo);
+            State.SetField(-2, "fetchram");
+
             State.SetGlobal("shinx");
         }
 
@@ -501,6 +507,41 @@ namespace Shinx
         {
             string path = ResolvePath(lua.L_CheckString(1));
             lua.PushString(PermissionManager.GetOwner(path));
+            return 1;
+        }
+        private static int L_CPUInfo(ILuaState lua)
+        {
+            string cpu = "idk";
+            try
+            {
+                cpu = Cosmos.Core.CPU.GetCPUBrandString() ?? "idk";
+            }
+            catch
+            {
+                cpu = "idk";
+            }
+            lua.PushString(cpu);
+            return 1;
+        }
+        private static int L_RAMInfo(ILuaState lua)
+        {
+            string ram = "idk";
+            try
+            {
+                ulong total = 0, used = 0;
+                try
+                {
+                    total = Cosmos.Core.GCImplementation.GetAvailableRAM();
+                    used = Cosmos.Core.GCImplementation.GetUsedRAM() / 1024 / 1024;
+                    ram = $"{used} MB used / {total} MB total";
+                }
+                catch { ram = "idk"; }
+            }
+            catch
+            {
+                ram = "idk";
+            }
+            lua.PushString(ram);
             return 1;
         }
         public static void SetArgs(string[] args)
