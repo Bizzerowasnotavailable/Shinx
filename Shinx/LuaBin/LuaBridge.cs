@@ -225,9 +225,10 @@ namespace Shinx
         private static int L_Register(ILuaState lua)
         {
             string name = lua.L_CheckString(1);
+            string desc = lua.GetTop() >= 3 ? lua.L_CheckString(3) : "lua command";
             lua.PushValue(2);
             lua.SetGlobal("__cmd_" + name);
-            peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name));
+            peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name), desc);
             return 0;
         }
 
