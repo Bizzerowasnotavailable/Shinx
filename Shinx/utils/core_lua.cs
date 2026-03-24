@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Cosmos.System.FileSystem.VFS;
+using System.IO;
 using UniLua;
-
 namespace Shinx.Commands
 {
     public class core_lua : ICommand
@@ -11,58 +10,63 @@ namespace Shinx.Commands
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("lua: no input");
+                Console.WriteLine("usage: lua <file.lua> [args...] or lua \"inline code\"");
                 return;
             }
 
+            string input = args[0];
+
+            string[] scriptArgs = args.Length > 1 ? args[1..] : Array.Empty<string>();
+            LuaBridge.SetArgs(scriptArgs);
+            LuaBridge.SetParams(parameters);
+
             try
             {
-                ILuaState lua = LuaAPI.NewState();
-
-                lua.L_OpenLibs();
-
-                string input = args[0];
-
                 if (input.EndsWith(".lua"))
                 {
                     string path = input.StartsWith(@"0:\")
                         ? input
                         : Shell.currentDirectory + input;
 
-                    if (!VFSManager.FileExists(path))
+                    if (!File.Exists(path))
                     {
-                        Console.WriteLine("lua: file not found");
+                        Console.WriteLine($"lua: {args[0]}: no such file");
                         return;
                     }
 
-                    var file = VFSManager.GetFile(path);
-                    var stream = file.GetFileStream();
+                    if (!PermissionManager.CanAccess(path, UserManager.currentUser))
+                    {
+                        Console.WriteLine($"lua: permission denied: {args[0]}");
+                        return;
+                    }
 
-                    byte[] buffer = new byte[stream.Length];
-                    stream.Read(buffer, 0, buffer.Length);
-
-                    string script = System.Text.Encoding.ASCII.GetString(buffer);
-
-                    var status = lua.L_DoString(script);
-
+                    string code = File.ReadAllText(path);
+                    var status = LuaBridge.State.L_DoString(code);
                     if (status != ThreadStatus.LUA_OK)
                     {
-                        Console.WriteLine("lua error: " + lua.ToString(-1));
+                        Console.WriteLine($"lua: {LuaBridge.State.L_ToString(-1)}");
+                        LuaBridge.State.Pop(1);
                     }
                 }
                 else
                 {
-                    var status = lua.L_DoString(input);
+                    if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
+                    {
+                        Console.WriteLine("lua: permission denied");
+                        return;
+                    }
 
+                    var status = LuaBridge.State.L_DoString(input);
                     if (status != ThreadStatus.LUA_OK)
                     {
-                        Console.WriteLine("lua error: " + lua.ToString(-1));
+                        Console.WriteLine($"lua: {LuaBridge.State.L_ToString(-1)}");
+                        LuaBridge.State.Pop(1);
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("lua: " + e.Message);
+                Console.WriteLine($"lua: {e.Message}");
             }
         }
     }
