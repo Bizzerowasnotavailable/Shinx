@@ -69,7 +69,7 @@ namespace Shinx
                     }
                 }
 
-                // commandHandler.Execute("fetch");
+                commandHandler.Execute("fetch");
                 Console.WriteLine("type lico for a list of commands");
 
                 while (UserManager.currentUser != "")

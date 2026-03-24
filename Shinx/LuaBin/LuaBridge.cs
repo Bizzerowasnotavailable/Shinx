@@ -228,7 +228,6 @@ namespace Shinx
             lua.PushValue(2);
             lua.SetGlobal("__cmd_" + name);
             peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name));
-            Console.WriteLine($"registered command: {name}");
             return 0;
         }
 
@@ -533,7 +532,6 @@ namespace Shinx
             foreach (var file in Directory.GetFiles(binPath))
             {
                 string fullPath = file.StartsWith(@"0:\") ? file : binPath + Path.GetFileName(file);
-                Console.WriteLine("bin: scanning " + fullPath);
                 if (!fullPath.EndsWith(".lua")) continue;
 
                 int stackBefore = State.GetTop();
