@@ -23,7 +23,10 @@ namespace Shinx
             try
             {
                 if (vbe == null)
+                {
                     vbe = (VBECanvas)FullScreenCanvas.GetFullScreenCanvas(new Mode(800, 600, ColorDepth.ColorDepth32));
+                    Cosmos.HAL.Global.PIT.Wait(50);
+                }
 
                 MouseManager.ScreenWidth = 800;
                 MouseManager.ScreenHeight = 600;
@@ -59,6 +62,7 @@ namespace Shinx
                             Shinx.GUI.DrawMenu.menu = !Shinx.GUI.DrawMenu.menu;
                         }
                     }
+
                     Shinx.GUI.DrawMenu.update(new System.Drawing.Point(mx, my), vbe);
                     Shinx.GUI.Mouse.DrawMouse(vbe, mx, my);
 
@@ -69,6 +73,7 @@ namespace Shinx
                 }
 
                 vbe.Disable();
+                vbe = null;
                 System.Console.Clear();
             }
             catch (Exception e)
