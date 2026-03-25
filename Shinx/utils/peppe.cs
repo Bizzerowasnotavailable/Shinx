@@ -37,7 +37,8 @@ namespace Shinx.Commands
                 { "groups", new core_groups() },
                 { "chown", new core_chown() },
                 { "chgrp", new core_chgrp() },
-                { "lua", new core_lua() }
+                { "lua", new core_lua() },
+                { "desktop", new core_desktop() }
             };
         }
 
