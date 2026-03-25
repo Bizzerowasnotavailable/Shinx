@@ -12,6 +12,7 @@ An hobby operating system built on [Cosmos](https://github.com/CosmosOS/Cosmos)
 - FAT filesystem
 - rm command
 - lua interpreter (ported from [AuraOS](https://github.com/aura-systems/Aura-Operating-System))
+- Desktop environment (based on [CrystalOS](https://github.com/CrystalOSDevelopment/CrystalOS))
 
 ## compiling instructions
 
