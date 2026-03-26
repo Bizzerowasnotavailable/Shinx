@@ -28,6 +28,10 @@
           <None Remove="LuaUtils\fetch.lua" />
         </ItemGroup>
 
+		<ItemGroup>
+			<PackageReference Include="CosmosHttp" Version="1.0.4" />
+		</ItemGroup>
+
        <ItemGroup>
       <EmbeddedResource Remove="LuaUtils\**\*.lua" />
   
