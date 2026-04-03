@@ -37,6 +37,14 @@
 
         shinx.writeline("Resolution: currently in console mode")
 
+        local s = shinx.netstatus()
+        if s.connected then
+            shinx.writeline("Network: " .. s.ip .. " (" .. s.mode .. ")")
+            shinx.writeline("DNS: " .. s.dns)
+        else
+            shinx.writeline("Network: disconnected")
+        end
+
         shinx.resetcolor()
     end)
     if not success then
