@@ -33,6 +33,8 @@ namespace Shinx
 
                 while (Running)
                 {
+                    Shinx.GUI.Mouse.UpdateState();
+
                     vbe.Clear(Shinx.GUI.Booleans.desktop_color);
 
                     Shinx.GUI.WindowManager.DrawWindows(vbe);
@@ -40,11 +42,15 @@ namespace Shinx
                     if (System.Console.KeyAvailable)
                     {
                         var key = System.Console.ReadKey(true);
-
-                        if (Shinx.GUI.Booleans.editor_opened)
-                            Shinx.GUI.TextEditor.HandleKey(key);
-                        else if (Shinx.GUI.Booleans.terminal_opened)
-                            Shinx.GUI.Terminal.HandleKey(key);
+                        if (Shinx.GUI.WindowManager.drawOrder.Count > 0)
+                        {
+                            string topAppID = Shinx.GUI.WindowManager.drawOrder[Shinx.GUI.WindowManager.drawOrder.Count - 1];
+                            var activeApp = Shinx.GUI.AppManager.GetApp(topAppID);
+                            if (activeApp != null && activeApp.IsVisible)
+                            {
+                                activeApp.HandleKey(key);
+                            }
+                        }
                     }
 
                     vbe.DrawFilledRectangle(taskbarPen, 0, 570, 800, 30);
@@ -71,7 +77,7 @@ namespace Shinx
                     vbe.Display();
 
                     frameCount++;
-                    if (frameCount > 500) { Cosmos.Core.Memory.Heap.Collect(); frameCount = 0; }
+                    if (frameCount > 1000) { Cosmos.Core.Memory.Heap.Collect(); frameCount = 0; }
                 }
 
                 vbe.Disable();

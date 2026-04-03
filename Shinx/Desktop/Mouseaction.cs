@@ -8,7 +8,8 @@ namespace Shinx.GUI
 {
     public static class Mouse
     {
-        public static Sys.MouseState PrevMouseState = Sys.MouseState.None;
+        private static bool _wasPressed = false;
+        private static bool _frameClick = false;
 
         private static Color mousePen = Color.White;
         private static Color borderPen = Color.Black;
@@ -22,9 +23,22 @@ namespace Shinx.GUI
 
         public static void UpdateState()
         {
-            PrevMouseState = CMouse.MouseState;
+            bool currentlyPressed = (CMouse.MouseState == Sys.MouseState.Left);
+
+            _frameClick = (currentlyPressed && !_wasPressed);
+
+            _wasPressed = currentlyPressed;
         }
 
+        public static bool Click()
+        {
+            return _frameClick;
+        }
+
+        public static bool IsPressed()
+        {
+            return CMouse.MouseState == Sys.MouseState.Left;
+        }
 
         public static void DrawMouse(Canvas vbe, int x, int y)
         {
@@ -38,19 +52,6 @@ namespace Shinx.GUI
             {
                 vbe.DrawLine(color, x + cursorShape[i][0], y + i, x + cursorShape[i][1], y + i);
             }
-        }
-        public static bool Click()
-        {
-            return CMouse.MouseState == Sys.MouseState.Left && PrevMouseState != Sys.MouseState.Left;
-        }
-        public static bool IsPressed()
-        {
-            return CMouse.MouseState == Sys.MouseState.Left;
-        }
-
-        public static bool RightClick()
-        {
-            return CMouse.MouseState == Sys.MouseState.Right && PrevMouseState != Sys.MouseState.Right;
         }
     }
 }

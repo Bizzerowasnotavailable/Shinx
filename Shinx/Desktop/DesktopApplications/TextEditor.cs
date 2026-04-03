@@ -6,8 +6,12 @@ using System.IO;
 
 namespace Shinx.GUI
 {
-    public class TextEditor
+    public class TextEditor : IGuiApp
     {
+        public string AppID => "Text Editor";
+        public string DisplayName => "Text Editor";
+        public bool IsVisible { get => Booleans.editor_opened; set => Booleans.editor_opened = value; }
+
         public static List<string> Lines = new List<string> { "" };
         public static string CurrentPath = "";
 
@@ -53,17 +57,21 @@ namespace Shinx.GUI
             Booleans.editor_opened = true;
         }
 
-        public static void Draw(Canvas canvas)
+        public void Draw(Canvas canvas)
         {
             if (!Booleans.editor_opened) return;
 
-            Window.Draw(canvas, ref Int_Manager.editor_x, ref Int_Manager.editor_y, Width, Height, $"Editor - {Path.GetFileName(CurrentPath)}", ref Booleans.editor_opened, "Text Editor");
+            string fileName = string.IsNullOrEmpty(CurrentPath) ? "Untitled" : Path.GetFileName(CurrentPath);
+            string dynamicTitle = "Editor - " + fileName;
+
+            Window.Draw(canvas, ref Int_Manager.editor_x, ref Int_Manager.editor_y, Width, Height, dynamicTitle, ref Booleans.editor_opened, AppID);
+
+            if (!Booleans.editor_opened) return;
 
             int x = Int_Manager.editor_x;
             int y = Int_Manager.editor_y;
 
             canvas.DrawFilledRectangle(Color.White, x + 1, y + TitleBarH, Width - 2, Height - TitleBarH - StatusBarH - 1);
-
             canvas.DrawFilledRectangle(Color.LightGray, x + 1, y + Height - StatusBarH, Width - 2, StatusBarH);
 
             string displayStatus = _isInputMode ? _inputPrompt + _inputBuffer + "_" : (_statusTimer > 0 ? _status : $"L: {_cursorY + 1} C: {_cursorX + 1} | Ctrl+S: Save | Ctrl+L: Load | Ctrl+G: GoTo");
@@ -86,11 +94,12 @@ namespace Shinx.GUI
             {
                 int cX = x + 5 + (_cursorX * CharW);
                 int cY = y + TitleBarH + 5 + ((_cursorY - _topLine) * CharH);
-                if (cX < x + Width - 10) canvas.DrawFilledRectangle(Color.Blue, cX, cY, 2, CharH);
+                if (cX < x + Width - 10)
+                    canvas.DrawFilledRectangle(Color.Blue, cX, cY, 2, CharH);
             }
         }
 
-        public static void HandleKey(ConsoleKeyInfo key)
+        public void HandleKey(ConsoleKeyInfo key)
         {
             if (!Booleans.editor_opened) return;
 
@@ -150,7 +159,7 @@ namespace Shinx.GUI
             HandleStandardInput(key);
         }
 
-        private static void HandleStandardInput(ConsoleKeyInfo key)
+        private void HandleStandardInput(ConsoleKeyInfo key)
         {
             string curLine = Lines[_cursorY];
             switch (key.Key)

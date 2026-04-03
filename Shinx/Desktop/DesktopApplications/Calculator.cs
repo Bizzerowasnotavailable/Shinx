@@ -1,21 +1,26 @@
-﻿using Cosmos.System;
+﻿using System;
+using Cosmos.System;
 using Cosmos.System.Graphics;
 using System.Drawing;
 
 namespace Shinx.GUI
 {
-    public static class Calculator
+    public class Calculator : IGuiApp
     {
+        public string AppID => "Calculator";
+        public string DisplayName => "Calculator";
+        public bool IsVisible { get => Booleans.calc_opened; set => Booleans.calc_opened = value; }
+
         public static string calcInput = "0";
         public static int storedNumber = 0;
         public static string currentOperation = "";
         public static bool wasCalcClickedLastFrame = false;
 
-        public static void Draw(Canvas vbe)
+        public void Draw(Canvas vbe)
         {
             if (Booleans.calc_opened)
             {
-                Window.Draw(vbe, ref Int_Manager.calc_x, ref Int_Manager.calc_y, 220, 280, "Calculator", ref Booleans.calc_opened);
+                Window.Draw(vbe, ref Int_Manager.calc_x, ref Int_Manager.calc_y, 220, 280, DisplayName, ref Booleans.calc_opened, AppID);
 
                 if (Booleans.calc_opened)
                 {
@@ -62,6 +67,9 @@ namespace Shinx.GUI
                     wasCalcClickedLastFrame = isClickedNow;
                 }
             }
+        }
+        public void HandleKey(ConsoleKeyInfo key)
+        {
         }
 
         private static void HandleCalcClick(string btn)
