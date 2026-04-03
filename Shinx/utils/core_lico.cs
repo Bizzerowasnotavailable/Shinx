@@ -34,6 +34,7 @@ namespace Shinx.Commands
             Console.WriteLine("lua: lua interpreter");
             Console.WriteLine("start_webserver: start http server");
             Console.WriteLine("desktop: launch graphical environment");
+            Console.WriteLine("net: manage network config");
             foreach (var d in peppe.descriptions)
                 Console.WriteLine(d.Key + ": " + d.Value);
         }

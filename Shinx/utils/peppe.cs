@@ -39,7 +39,7 @@ namespace Shinx.Commands
                 { "chgrp", new core_chgrp() },
                 { "lua", new core_lua() },
                 { "desktop", new core_desktop() },
-                { "network", new core_network() },
+                { "net", new core_network() },
                 { "ping", new core_ping() },
                 { "start_webserver", new core_http() }
             };

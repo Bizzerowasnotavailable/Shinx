@@ -9,13 +9,13 @@ namespace Shinx.Commands
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("usage: network <command>");
-                Console.WriteLine("  network status");
-                Console.WriteLine("  network dhcp");
-                Console.WriteLine("  network static <ip> <mask> <gateway>");
-                Console.WriteLine("  network dns <ip>");
-                Console.WriteLine("  network resolve <hostname>");
-                Console.WriteLine("  network disconnect");
+                Console.WriteLine("usage: net <command>");
+                Console.WriteLine("  net status");
+                Console.WriteLine("  net dhcp");
+                Console.WriteLine("  net static <ip> <mask> <gateway>");
+                Console.WriteLine("  net dns <ip>");
+                Console.WriteLine("  net resolve <hostname>");
+                Console.WriteLine("  net disconnect");
                 return;
             }
 
@@ -63,7 +63,7 @@ namespace Shinx.Commands
                     break;
 
                 default:
-                    Console.WriteLine($"network: unknown command: {args[0]}");
+                    Console.WriteLine($"net: unknown command: {args[0]}");
                     break;
             }
         }

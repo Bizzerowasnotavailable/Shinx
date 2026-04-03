@@ -21,12 +21,10 @@ namespace Shinx.Commands
                 return;
             }
 
-            // 1. Trim cleans any invisible characters from the console (Fixes the raw IP bug)
             string host = args[0].Trim();
             int count = 4;
             string ip = host;
 
-            // 2. If it doesn't look like a raw IP address, ask the DNS server to resolve it
             if (host.Split('.').Length != 4)
             {
                 ip = NetworkManager.Resolve(host);
@@ -41,7 +39,6 @@ namespace Shinx.Commands
 
             try
             {
-                // Let Cosmos handle the safe parsing
                 var target = Address.Parse(ip);
 
                 int sent = 0, received = 0;
@@ -56,7 +53,6 @@ namespace Shinx.Commands
                         icmp.SendEcho();
                         sent++;
 
-                        // FORCE Cosmos to wait up to 4000ms (4 seconds) for the reply
                         int time = icmp.Receive(ref endpoint, 4000);
 
                         if (time == -1)
@@ -69,8 +65,6 @@ namespace Shinx.Commands
                             Console.WriteLine($"  reply from {ip}: time={time}ms");
                         }
 
-                        // CRITICAL: Wait 1 second before sending the next ping.
-                        // This prevents the Cosmos network buffer from flooding.
                         if (i < count - 1)
                         {
                             Cosmos.HAL.Global.PIT.Wait(1000);
