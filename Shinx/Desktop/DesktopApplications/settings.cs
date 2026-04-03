@@ -8,7 +8,7 @@ namespace Shinx.GUI
     {
         public static bool wasSettingsClickedLastFrame = false;
 
-        public static void Draw(VBECanvas vbe)
+        public static void Draw(Canvas vbe)
         {
             if (!Booleans.settings_opened) 
             {
@@ -30,11 +30,11 @@ namespace Shinx.GUI
 
                 ASC16.DrawACSIIString(vbe, "Desktop Color:", Color.Black, (uint)x + 15, (uint)y + 80);
                 
-                vbe.DrawFilledRectangle(new Pen(Color.RoyalBlue), x + 20, y + 105, 30, 30);
-                vbe.DrawFilledRectangle(new Pen(Color.DarkSlateGray), x + 60, y + 105, 30, 30);
-                vbe.DrawFilledRectangle(new Pen(Color.DarkOliveGreen), x + 100, y + 105, 30, 30);
-                vbe.DrawFilledRectangle(new Pen(Color.Maroon), x + 140, y + 105, 30, 30);
-                vbe.DrawFilledRectangle(new Pen(Color.Purple), x + 180, y + 105, 30, 30);
+                vbe.DrawFilledRectangle(Color.RoyalBlue, x + 20, y + 105, 30, 30);
+                vbe.DrawFilledRectangle(Color.DarkSlateGray, x + 60, y + 105, 30, 30);
+                vbe.DrawFilledRectangle(Color.DarkOliveGreen, x + 100, y + 105, 30, 30);
+                vbe.DrawFilledRectangle(Color.Maroon, x + 140, y + 105, 30, 30);
+                vbe.DrawFilledRectangle(Color.Purple, x + 180, y + 105, 30, 30);
 
                 int selX = 0;
                 if (Booleans.desktop_color == Color.RoyalBlue) selX = 20;
@@ -43,10 +43,10 @@ namespace Shinx.GUI
                 else if (Booleans.desktop_color == Color.Maroon) selX = 140;
                 else if (Booleans.desktop_color == Color.Purple) selX = 180;
                 
-                if (selX != 0) vbe.DrawRectangle(new Pen(Color.White), x + selX - 2, y + 103, 34, 34);
+                if (selX != 0) vbe.DrawRectangle(Color.White, x + selX - 2, y + 103, 34, 34);
 
-                vbe.DrawFilledRectangle(new Pen(Color.DarkRed), x + 20, y + 230, 210, 30);
-                vbe.DrawRectangle(new Pen(Color.White), x + 20, y + 230, 210, 30);
+                vbe.DrawFilledRectangle(Color.DarkRed, x + 20, y + 230, 210, 30);
+                vbe.DrawRectangle(Color.White, x + 20, y + 230, 210, 30);
                 ASC16.DrawACSIIString(vbe, "Exit to Console", Color.White, (uint)x + 55, (uint)y + 238);
 
                 bool isClickedNow = Mouse.Click();

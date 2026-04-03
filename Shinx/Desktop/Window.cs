@@ -10,13 +10,13 @@ namespace Shinx.GUI
         public static int dragOffsetX = 0;
         public static int dragOffsetY = 0;
 
-        private static Pen bgPen = new Pen(Color.LightGray);
-        private static Pen borderPen = new Pen(Color.Black);
-        private static Pen titleBarPen = new Pen(Color.DarkBlue);
-        private static Pen closeBtnPen = new Pen(Color.Red);
-        private static Pen xIconPen = new Pen(Color.White);
+		private static Color bgPen = Color.LightGray;
+		private static Color borderPen = Color.Black;
+		private static Color titleBarPen = Color.DarkBlue;
+		private static Color closeBtnPen = Color.Red;
+		private static Color xIconPen = Color.White;
 
-        public static void Draw(VBECanvas vbe, ref int x, ref int y, int width, int height, string title, ref bool isOpen)
+		public static void Draw(Canvas vbe, ref int x, ref int y, int width, int height, string title, ref bool isOpen)
         {
             if (!isOpen) return;
 

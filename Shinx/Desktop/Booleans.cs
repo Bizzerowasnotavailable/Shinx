@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using Cosmos.System.Graphics;
+using Cosmos.System.Graphics.Fonts;
+using System.Drawing;
 
 namespace Shinx.GUI
 {

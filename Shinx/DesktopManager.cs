@@ -1,18 +1,18 @@
 using System;
-using System.Drawing;
 using Cosmos.System;
 using Cosmos.System.Graphics;
+using System.Drawing;
 
 namespace Shinx
 {
     public static class DesktopManager
     {
         public static bool Running = true;
-        private static VBECanvas vbe;
+        private static Canvas vbe;
         private static int frameCount = 0;
 
-        private static Pen taskbarPen = new Pen(Color.FromArgb(255, 40, 40, 40));
-        private static Pen startBtnPen = new Pen(Color.LightGray);
+        private static Color taskbarPen = Color.FromArgb(255, 40, 40, 40);
+        private static Color startBtnPen = Color.LightGray;
 
         public static void Start()
         {
@@ -24,7 +24,7 @@ namespace Shinx
             {
                 if (vbe == null)
                 {
-                    vbe = (VBECanvas)FullScreenCanvas.GetFullScreenCanvas(new Mode(800, 600, ColorDepth.ColorDepth32));
+                    vbe = (Canvas)FullScreenCanvas.GetFullScreenCanvas(new Mode(800, 600, ColorDepth.ColorDepth32));
                     Cosmos.HAL.Global.PIT.Wait(50);
                 }
 

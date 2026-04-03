@@ -6,7 +6,7 @@ namespace Shinx.GUI
 {
     public static class Clock
     {
-        public static void Draw(VBECanvas vbe)
+        public static void Draw(Canvas vbe)
         {
             if (Booleans.clock_opened)
             {

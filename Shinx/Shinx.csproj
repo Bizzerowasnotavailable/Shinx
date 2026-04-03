@@ -1,12 +1,12 @@
 ﻿    <Project Sdk="Microsoft.NET.Sdk">
 
-        <PropertyGroup>
-            <TargetFramework>net6.0</TargetFramework>
-            <!--<RuntimeIdentifier>cosmos</RuntimeIdentifier>-->
-            <Platform>cosmos</Platform>
-            <SupportsX86Intrinsics>false</SupportsX86Intrinsics>
-            <SelfContained>True</SelfContained>
-        </PropertyGroup>
+		<PropertyGroup>
+			<TargetFramework>net6.0</TargetFramework>
+			<!--<RuntimeIdentifier>cosmos</RuntimeIdentifier>-->
+			<Platform>cosmos</Platform>
+			<SupportsX86Intrinsics>false</SupportsX86Intrinsics>
+			<SelfContained>True</SelfContained>
+		</PropertyGroup>
 
         <PropertyGroup>
             <EnableGDB>False</EnableGDB>
@@ -36,10 +36,15 @@
       </EmbeddedResource>
     </ItemGroup>
 
-        <ItemGroup>
-            <PackageReference Include="Cosmos.Build" Version="0-*" NoWarn="NU1604" />
-            <PackageReference Include="Cosmos.Debug.Kernel" Version="0-*" NoWarn="NU1604" />
-            <PackageReference Include="Cosmos.System2" Version="0-*" NoWarn="NU1604" />
-        </ItemGroup>
+		<ItemGroup>
+			<PackageReference Include="Cosmos.Build" Version="0-*" NoWarn="NU1604" />
+			<PackageReference Include="Cosmos.Common" Version="0.1.0-localbuild20260326072445" />
+			<PackageReference Include="Cosmos.Core" Version="0.1.0-localbuild20260326072445" />
+			<PackageReference Include="Cosmos.Debug.Kernel" Version="0-*" NoWarn="NU1604" />
+			<PackageReference Include="Cosmos.HAL2" Version="0.1.0-localbuild20260326072445" />
+			<PackageReference Include="Cosmos.Kernel" Version="0-*" NoWarn="NU1604" />
+			<PackageReference Include="Cosmos.Plugs" Version="0.1.0-localbuild20260326072445" />
+			<PackageReference Include="Cosmos.System2" Version="0-*" NoWarn="NU1604" />
+		</ItemGroup>
 
     </Project>
