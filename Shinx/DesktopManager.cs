@@ -37,6 +37,13 @@ namespace Shinx
 
                     Shinx.GUI.WindowManager.DrawWindows(vbe);
 
+                    if (System.Console.KeyAvailable)
+                    {
+                        var key = System.Console.ReadKey(true);
+                        if (Shinx.GUI.Booleans.terminal_opened)
+                            Shinx.GUI.Terminal.HandleKey(key);
+                    }
+
                     vbe.DrawFilledRectangle(taskbarPen, 0, 570, 800, 30);
                     vbe.DrawFilledRectangle(startBtnPen, 0, 570, 60, 30);
                     Shinx.GUI.ASC16.DrawACSIIString(vbe, "Start", Color.Black, 10, 578);

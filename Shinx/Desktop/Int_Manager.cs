@@ -16,5 +16,8 @@
 
         public static int settings_x = 200;
         public static int settings_y = 200;
+
+        public static int terminal_x = 100;
+        public static int terminal_y = 100;
     }
 }

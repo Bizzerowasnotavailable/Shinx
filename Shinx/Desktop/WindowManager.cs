@@ -4,7 +4,7 @@ namespace Shinx.GUI
 {
     public static class WindowManager
     {
-        public static string[] drawOrder = { "About Shinx OS", "Clock", "Calculator", "Calendar", "Settings" };
+        public static string[] drawOrder = { "About Shinx OS", "Clock", "Calculator", "Calendar", "Settings", "Terminal" };
 
         public static string windowToBringToFront = "";
 
@@ -30,6 +30,9 @@ namespace Shinx.GUI
                         break;
                     case "Settings":
                         if (Booleans.settings_opened) settings.Draw(vbe);
+                        break;
+                    case "Terminal":
+                        if (Booleans.terminal_opened) Terminal.Draw(vbe);
                         break;
                 }
             }

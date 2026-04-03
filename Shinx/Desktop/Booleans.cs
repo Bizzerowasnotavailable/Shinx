@@ -11,6 +11,7 @@ namespace Shinx.GUI
         public static bool calc_opened = false;
         public static bool calendar_opened = false;
         public static bool settings_opened = false;
+        public static bool terminal_opened = false;
 
         public static bool use_24hr_clock = true;
         public static Color desktop_color = Color.RoyalBlue;
