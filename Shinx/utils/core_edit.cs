@@ -1,6 +1,7 @@
-﻿using System;
-using System.IO;
+﻿using Shinx.GUI;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Shinx.Commands
 {
@@ -26,6 +27,12 @@ namespace Shinx.Commands
             }
 
             path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+
+            if (DesktopManager.Running)
+            {
+                TextEditor.Open(path);
+                return;
+            }
 
             lines.Clear();
             if (File.Exists(path))

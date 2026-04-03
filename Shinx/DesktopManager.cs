@@ -40,7 +40,10 @@ namespace Shinx
                     if (System.Console.KeyAvailable)
                     {
                         var key = System.Console.ReadKey(true);
-                        if (Shinx.GUI.Booleans.terminal_opened)
+
+                        if (Shinx.GUI.Booleans.editor_opened)
+                            Shinx.GUI.TextEditor.HandleKey(key);
+                        else if (Shinx.GUI.Booleans.terminal_opened)
                             Shinx.GUI.Terminal.HandleKey(key);
                     }
 
@@ -51,16 +54,8 @@ namespace Shinx
                     int mx = (int)MouseManager.X;
                     int my = (int)MouseManager.Y;
 
-                    if (mx > 792)
-                    {
-                        MouseManager.X = 792;
-                        mx = 792;
-                    }
-                    if (my > 592)
-                    {
-                        MouseManager.Y = 592;
-                        my = 592;
-                    }
+                    if (mx > 792) { MouseManager.X = 792; mx = 792; }
+                    if (my > 592) { MouseManager.Y = 592; my = 592; }
 
                     if (Shinx.GUI.Mouse.Click())
                     {

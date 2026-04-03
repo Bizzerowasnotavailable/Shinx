@@ -19,5 +19,8 @@
 
         public static int terminal_x = 100;
         public static int terminal_y = 100;
+
+        public static int editor_x = 100;
+        public static int editor_y = 80;
     }
 }
