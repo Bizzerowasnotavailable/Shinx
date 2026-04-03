@@ -16,7 +16,9 @@ An hobby operating system built on [Cosmos](https://github.com/CosmosOS/Cosmos)
 
 ## compiling instructions
 
-- download [Cosmos and all the dependencies](https://github.com/CosmosOS/Cosmos)
+### Cosmos' official Userkit is 3 years out of date!!
+- download [OUR UserKit](https://github.com/Bizzerowasnotavailable/Shinx/raw/refs/heads/refactor/devkit/Tools/CosmosUserKit-20260326-vs2022.exe)
+- download [all the dependencies](https://github.com/CosmosOS/Cosmos) except the Cosmos userkit
 - build as "Debug"
 - if the ISO doesn't boot outside of vmware, disable "Remote debugging" in "Debug" > "shinx debug properties"
 ![debug instructions](shinx-assets/debugging.PNG)
