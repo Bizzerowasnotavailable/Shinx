@@ -11,7 +11,7 @@ namespace Shinx.GUI
         public static string currentOperation = "";
         public static bool wasCalcClickedLastFrame = false;
 
-        public static void Draw(VBECanvas vbe)
+        public static void Draw(Canvas vbe)
         {
             if (Booleans.calc_opened)
             {
@@ -22,8 +22,8 @@ namespace Shinx.GUI
                     int x = Int_Manager.calc_x;
                     int y = Int_Manager.calc_y;
 
-                    vbe.DrawFilledRectangle(new Pen(Color.White), x + 10, y + 30, 200, 40);
-                    vbe.DrawRectangle(new Pen(Color.DarkGray), x + 10, y + 30, 200, 40);
+                    vbe.DrawFilledRectangle(Color.White, x + 10, y + 30, 200, 40);
+                    vbe.DrawRectangle(Color.DarkGray, x + 10, y + 30, 200, 40);
 
                     uint textX = (uint)(x + 200 - (calcInput.Length * 8));
                     ASC16.DrawACSIIString(vbe, calcInput, Color.Black, textX, (uint)y + 42);
@@ -43,8 +43,8 @@ namespace Shinx.GUI
                             int btnY = y + 80 + (row * 45);
                             string btnText = buttons[btnIndex];
 
-                            vbe.DrawFilledRectangle(new Pen(Color.LightGray), btnX, btnY, 45, 40);
-                            vbe.DrawRectangle(new Pen(Color.Gray), btnX, btnY, 45, 40);
+                            vbe.DrawFilledRectangle(Color.LightGray, btnX, btnY, 45, 40);
+                            vbe.DrawRectangle(Color.Gray, btnX, btnY, 45, 40);
 
                             uint btnTextX = (uint)(btnX + 22 - (btnText.Length * 4));
                             ASC16.DrawACSIIString(vbe, btnText, Color.Black, btnTextX, (uint)(btnY + 12));

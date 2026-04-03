@@ -10,46 +10,44 @@ namespace Shinx.GUI
 
         private static byte[] FontData;
 
-        public static void DrawACSIIString(VBECanvas vbe, string s, Color color, uint x, uint y)
-        {
-            if (string.IsNullOrEmpty(s)) return;
+		public static void DrawACSIIString(Canvas vbe, string s, Color color, uint x, uint y)
+		{
+			if (string.IsNullOrEmpty(s)) return;
 
-            if (FontData == null)
-                FontData = Convert.FromBase64String(ASC16Base64);
+			if (FontData == null)
+				FontData = Convert.FromBase64String(ASC16Base64);
 
-            Pen p = new Pen(color);
+			int curX = (int)x;
+			int curY = (int)y;
 
-            int curX = (int)x;
-            int curY = (int)y;
+			for (int k = 0; k < s.Length; k++)
+			{
+				char c = s[k];
 
-            for (int k = 0; k < s.Length; k++)
-            {
-                char c = s[k];
+				if (c == '\n')
+				{
+					curY += 16;
+					curX = (int)x;
+					continue;
+				}
 
-                if (c == '\n')
-                {
-                    curY += 16;
-                    curX = (int)x;
-                    continue;
-                }
+				int offset = (c & 0xFF) * 16;
 
-                int offset = (c & 0xFF) * 16;
+				for (int i = 0; i < 16; i++)
+				{
+					byte row = FontData[offset + i];
+					if (row == 0) continue;
 
-                for (int i = 0; i < 16; i++)
-                {
-                    byte row = FontData[offset + i];
-                    if (row == 0) continue;
-
-                    for (int j = 0; j < 8; j++)
-                    {
-                        if ((row & (0x80 >> j)) != 0)
-                        {
-                            vbe.DrawPoint(p, curX + j, curY + i);
-                        }
-                    }
-                }
-                curX += 8;
-            }
-        }
-    }
+					for (int j = 0; j < 8; j++)
+					{
+						if ((row & (0x80 >> j)) != 0)
+						{
+							vbe.DrawPoint(color, curX + j, curY + i);
+						}
+					}
+				}
+				curX += 8;
+			}
+		}
+	}
 }

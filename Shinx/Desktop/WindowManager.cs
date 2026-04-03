@@ -8,7 +8,7 @@ namespace Shinx.GUI
 
         public static string windowToBringToFront = "";
 
-        public static void DrawWindows(VBECanvas vbe)
+        public static void DrawWindows(Canvas vbe)
         {
             for (int i = 0; i < drawOrder.Length; i++)
             {

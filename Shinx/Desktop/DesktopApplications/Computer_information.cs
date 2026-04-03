@@ -37,7 +37,7 @@ namespace Shinx.GUI
             }
         }
 
-        public static void Draw(VBECanvas vbe)
+        public static void Draw(Canvas vbe)
         {
             if (!Booleans.info_opened) return;
 
