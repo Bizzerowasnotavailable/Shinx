@@ -24,6 +24,12 @@ namespace Shinx.Commands
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
+            if (DesktopManager.Running)
+            {
+                Console.WriteLine("http: cannot run while desktop is active");
+                return;
+            }
+
             if (!NetworkManager.IsConnected)
             {
                 Console.WriteLine("http: no network connection");

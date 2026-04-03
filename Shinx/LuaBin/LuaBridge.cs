@@ -12,7 +12,7 @@ namespace Shinx
     {
         public static ILuaState State;
 
-        private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "start_webserver", "net", "lua", "passwd", "su" };
+        private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "http", "net", "lua", "passwd", "su" };
         public static void Init()
         {
             State = LuaAPI.NewState();
@@ -753,7 +753,7 @@ namespace Shinx
             string root = lua.GetTop() >= 1 ? ResolvePath(lua.L_CheckString(1)) : Shell.currentDirectory;
             int port = lua.GetTop() >= 2 ? lua.L_CheckInteger(2) : 8080;
 
-            Kernel.commandHandler.Execute("start_webserver " + root + " " + port);
+            Kernel.commandHandler.Execute("http " + root + " " + port);
             lua.PushBoolean(true);
             return 1;
         }

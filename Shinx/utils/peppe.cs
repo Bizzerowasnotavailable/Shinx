@@ -41,7 +41,7 @@ namespace Shinx.Commands
                 { "desktop", new core_desktop() },
                 { "net", new core_network() },
                 { "ping", new core_ping() },
-                { "start_webserver", new core_http() }
+                { "http", new core_http() }
             };
         }
 
