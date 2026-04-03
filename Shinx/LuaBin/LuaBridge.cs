@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
+using System.Text;
 using UniLua;
 
 namespace Shinx
@@ -10,8 +12,7 @@ namespace Shinx
     {
         public static ILuaState State;
 
-        private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd" };
-
+        private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "start_webserver", "net", "lua", "passwd", "su" };
         public static void Init()
         {
             State = LuaAPI.NewState();
@@ -119,10 +120,10 @@ namespace Shinx
             State.PushCSharpFunction(L_SetCursor);
             State.SetField(-2, "setcursor");
 
-            State.PushCSharpFunction(L_HasKey); 
+            State.PushCSharpFunction(L_HasKey);
             State.SetField(-2, "haskey");
 
-            State.PushCSharpFunction(L_GetKey); 
+            State.PushCSharpFunction(L_GetKey);
             State.SetField(-2, "getkey");
 
             State.PushCSharpFunction(L_HideCursor);
@@ -131,9 +132,23 @@ namespace Shinx
             State.PushCSharpFunction(L_ShowCursor);
             State.SetField(-2, "showcursor");
 
+            State.PushCSharpFunction(L_NetIsConnected);
+            State.SetField(-2, "netconnected");
+
+            State.PushCSharpFunction(L_NetStatus);
+            State.SetField(-2, "netstatus");
+
+            State.PushCSharpFunction(L_NetResolve);
+            State.SetField(-2, "netresolve");
+
+            State.PushCSharpFunction(L_NetGet);
+            State.SetField(-2, "netget");
+
+            State.PushCSharpFunction(L_HttpServe);
+            State.SetField(-2, "httpserve");
+
             State.SetGlobal("shinx");
         }
-
         private static string ResolvePath(string path)
         {
             path = path.Replace('/', '\\');
@@ -184,7 +199,6 @@ namespace Shinx
             lua.PushString(Console.ReadLine());
             return 1;
         }
-
         private static int L_ReadLine(ILuaState lua)
         {
             string prompt = lua.L_CheckString(1);
@@ -211,13 +225,11 @@ namespace Shinx
             Kernel.commandHandler.Execute(cmd);
             return 0;
         }
-
         private static int L_CurrentDir(ILuaState lua)
         {
             lua.PushString(Shell.currentDirectory);
             return 1;
         }
-
         private static int L_SetDir(ILuaState lua)
         {
             string path = ResolvePath(lua.L_CheckString(1));
@@ -240,19 +252,16 @@ namespace Shinx
             lua.PushBoolean(true);
             return 1;
         }
-
         private static int L_CurrentUser(ILuaState lua)
         {
             lua.PushString(UserManager.currentUser);
             return 1;
         }
-
         private static int L_IsRoot(ILuaState lua)
         {
             lua.PushBoolean(UserManager.IsRoot(UserManager.currentUser));
             return 1;
         }
-
         private static int L_Register(ILuaState lua)
         {
             string name = lua.L_CheckString(1);
@@ -262,19 +271,16 @@ namespace Shinx
             peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name), desc);
             return 0;
         }
-
         private static int L_Args(ILuaState lua)
         {
             lua.GetGlobal("__args");
             return 1;
         }
-
         private static int L_Params(ILuaState lua)
         {
             lua.GetGlobal("__params");
             return 1;
         }
-
         private static int L_Time(ILuaState lua)
         {
             lua.PushString(DateTime.Now.ToString("HH:mm:ss"));
@@ -322,7 +328,6 @@ namespace Shinx
                 return 2;
             }
         }
-
         private static int L_ReadFile(ILuaState lua)
         {
             string path = ResolvePath(lua.L_CheckString(1));
@@ -347,7 +352,6 @@ namespace Shinx
                 return 2;
             }
         }
-
         private static int L_WriteFile(ILuaState lua)
         {
             string path = ResolvePath(lua.L_CheckString(1));
@@ -383,7 +387,6 @@ namespace Shinx
             lua.PushBoolean(exists);
             return 1;
         }
-
         private static int L_MkDir(ILuaState lua)
         {
             string path = ResolvePath(lua.L_CheckString(1));
@@ -417,7 +420,6 @@ namespace Shinx
                 return 2;
             }
         }
-
         private static int L_Delete(ILuaState lua)
         {
             string path = ResolvePath(lua.L_CheckString(1));
@@ -452,7 +454,6 @@ namespace Shinx
                 return 2;
             }
         }
-
         private static int L_MoveFile(ILuaState lua)
         {
             string src = ResolvePath(lua.L_CheckString(1));
@@ -487,7 +488,6 @@ namespace Shinx
                 return 2;
             }
         }
-
         private static int L_CopyFile(ILuaState lua)
         {
             string src = ResolvePath(lua.L_CheckString(1));
@@ -582,13 +582,11 @@ namespace Shinx
             Console.SetCursorPosition(x, y);
             return 0;
         }
-
         private static int L_HasKey(ILuaState lua)
         {
             lua.PushBoolean(Console.KeyAvailable);
             return 1;
         }
-
         private static int L_GetKey(ILuaState lua)
         {
             if (Console.KeyAvailable)
@@ -607,11 +605,157 @@ namespace Shinx
             Console.CursorVisible = false;
             return 0;
         }
-
         private static int L_ShowCursor(ILuaState lua)
         {
             Console.CursorVisible = true;
             return 0;
+        }
+        private static int L_NetIsConnected(ILuaState lua)
+        {
+            lua.PushBoolean(NetworkManager.IsConnected);
+            return 1;
+        }
+        private static int L_NetStatus(ILuaState lua)
+        {
+            lua.NewTable();
+
+            lua.PushString("connected");
+            lua.PushBoolean(NetworkManager.IsConnected);
+            lua.SetTable(-3);
+
+            lua.PushString("ip");
+            lua.PushString(NetworkManager.CurrentIP ?? "");
+            lua.SetTable(-3);
+
+            lua.PushString("mask");
+            lua.PushString(NetworkManager.CurrentMask ?? "");
+            lua.SetTable(-3);
+
+            lua.PushString("gateway");
+            lua.PushString(NetworkManager.CurrentGateway ?? "");
+            lua.SetTable(-3);
+
+            lua.PushString("dns");
+            lua.PushString(NetworkManager.DNSServer ?? "");
+            lua.SetTable(-3);
+
+            lua.PushString("mode");
+            lua.PushString(NetworkManager.Mode ?? "none");
+            lua.SetTable(-3);
+
+            return 1;
+        }
+        private static int L_NetResolve(ILuaState lua)
+        {
+            if (!NetworkManager.IsConnected)
+            {
+                lua.PushNil();
+                lua.PushString("not connected");
+                return 2;
+            }
+            string hostname = lua.L_CheckString(1);
+            string ip = NetworkManager.Resolve(hostname);
+            if (ip != null)
+            {
+                lua.PushString(ip);
+                return 1;
+            }
+            lua.PushNil();
+            lua.PushString("resolution failed");
+            return 2;
+        }
+        private static int L_NetGet(ILuaState lua)
+        {
+            if (!NetworkManager.IsConnected)
+            {
+                lua.PushNil();
+                lua.PushString("not connected");
+                return 2;
+            }
+
+            string url = lua.L_CheckString(1);
+
+            if (!url.StartsWith("http://"))
+            {
+                lua.PushNil();
+                lua.PushString("only http:// is supported");
+                return 2;
+            }
+
+            try
+            {
+                string hostAndPath = url.Substring(7);
+                int slash = hostAndPath.IndexOf('/');
+                string host = slash >= 0 ? hostAndPath.Substring(0, slash) : hostAndPath;
+                string path = slash >= 0 ? hostAndPath.Substring(slash) : "/";
+
+                string ip = NetworkManager.Resolve(host);
+                if (ip == null)
+                {
+                    lua.PushNil();
+                    lua.PushString("dns resolution failed");
+                    return 2;
+                }
+
+                using (var client = new TcpClient())
+                {
+                    client.Connect(ip, 80);
+                    NetworkStream stream = client.GetStream();
+
+                    string req =
+                        "GET " + path + " HTTP/1.0\r\n" +
+                        "Host: " + host + "\r\n" +
+                        "Connection: close\r\n\r\n";
+
+                    byte[] reqBytes = Encoding.ASCII.GetBytes(req);
+                    stream.Write(reqBytes, 0, reqBytes.Length);
+
+                    var resp = new List<byte>();
+                    byte[] buf = new byte[1024];
+                    int read;
+                    while ((read = stream.Read(buf, 0, buf.Length)) > 0)
+                        for (int i = 0; i < read; i++) resp.Add(buf[i]);
+
+                    stream.Close();
+
+                    string full = Encoding.ASCII.GetString(resp.ToArray());
+                    int headerEnd = full.IndexOf("\r\n\r\n");
+                    if (headerEnd < 0) headerEnd = full.IndexOf("\n\n");
+                    string body = headerEnd >= 0 ? full.Substring(headerEnd + 4) : full;
+
+                    lua.PushString(body);
+                    return 1;
+                }
+            }
+            catch (Exception e)
+            {
+                lua.PushNil();
+                lua.PushString(e.Message);
+                return 2;
+            }
+        }
+        private static int L_HttpServe(ILuaState lua)
+        {
+            if (!UserManager.IsRoot(UserManager.currentUser))
+            {
+                lua.PushBoolean(false);
+                lua.PushString("permission denied");
+                return 2;
+            }
+
+            if (!NetworkManager.IsConnected)
+            {
+                lua.PushBoolean(false);
+                lua.PushString("not connected");
+                return 2;
+            }
+
+            string root = lua.GetTop() >= 1 ? ResolvePath(lua.L_CheckString(1)) : Shell.currentDirectory;
+            int port = lua.GetTop() >= 2 ? lua.L_CheckInteger(2) : 8080;
+
+            Kernel.commandHandler.Execute("start_webserver " + root + " " + port);
+            lua.PushBoolean(true);
+            return 1;
         }
         public static void SetArgs(string[] args)
         {
@@ -623,7 +767,6 @@ namespace Shinx
             }
             State.SetGlobal("__args");
         }
-
         public static void SetParams(HashSet<char> parameters)
         {
             State.NewTable();
@@ -634,7 +777,6 @@ namespace Shinx
             }
             State.SetGlobal("__params");
         }
-
         public static void ScanBin()
         {
             string binPath = @"0:\bin\";
