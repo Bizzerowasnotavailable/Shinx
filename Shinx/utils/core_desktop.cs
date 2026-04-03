@@ -10,6 +10,7 @@ namespace Shinx.Commands
             try
             {
                 DesktopManager.Start();
+                DesktopManager.Running = false;
                 Console.Clear();
                 Console.WriteLine("Returned to Shinx Console.");
             }

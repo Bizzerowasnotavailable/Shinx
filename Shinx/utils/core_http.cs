@@ -45,7 +45,7 @@ namespace Shinx.Commands
             string myIp = NetworkManager.CurrentIP;
             Console.WriteLine("http: serving " + rootFolder);
             Console.WriteLine("http: http://" + myIp + ":" + port);
-            Console.WriteLine("http: press any key to stop");
+            Console.WriteLine("http: navigate to http://" + myIp + ":" + port + "/stop to stop");
 
             try
             {
@@ -54,14 +54,6 @@ namespace Shinx.Commands
 
                 while (true)
                 {
-                    if (Console.KeyAvailable)
-                    {
-                        Console.ReadKey(true);
-                        Console.WriteLine("http: stopping...");
-                        listener.Stop();
-                        return;
-                    }
-
                     TcpClient client = listener.AcceptTcpClient();
                     HandleClient(client, rootFolder);
                 }

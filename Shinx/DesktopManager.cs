@@ -7,7 +7,7 @@ namespace Shinx
 {
     public static class DesktopManager
     {
-        public static bool Running = true;
+        public static bool Running = false;
         private static Canvas vbe;
         private static int frameCount = 0;
 
