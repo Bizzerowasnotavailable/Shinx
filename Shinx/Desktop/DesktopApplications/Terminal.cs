@@ -6,8 +6,12 @@ using System.Drawing;
 
 namespace Shinx.GUI
 {
-    public class Terminal
+    public class Terminal : IGuiApp
     {
+        public string AppID => "Terminal";
+        public string DisplayName => "Terminal";
+        public bool IsVisible { get => Booleans.terminal_opened; set => Booleans.terminal_opened = value; }
+
         private static List<string> _lines = new List<string>();
         private static string _input = "";
         private static int _cursorPos = 0;
@@ -45,17 +49,11 @@ namespace Shinx.GUI
             }
             _lines.Add(line);
         }
-
-        public static void Draw(Canvas canvas)
+        public void Draw(Canvas canvas)
         {
             if (!Booleans.terminal_opened) return;
 
-            Window.Draw(canvas,
-                ref Int_Manager.terminal_x,
-                ref Int_Manager.terminal_y,
-                Width, Height,
-                "Terminal",
-                ref Booleans.terminal_opened);
+            Window.Draw(canvas, ref Int_Manager.terminal_x, ref Int_Manager.terminal_y, Width, Height, DisplayName, ref Booleans.terminal_opened, AppID);
 
             if (!Booleans.terminal_opened) return;
 
@@ -90,8 +88,7 @@ namespace Shinx.GUI
             int cursorX = x + Padding + (prompt.Length + _cursorPos) * CharW;
             canvas.DrawFilledRectangle(CursorColor, cursorX, inputY + CharH - 2, CharW, 2);
         }
-
-        public static void HandleKey(ConsoleKeyInfo key)
+        public void HandleKey(ConsoleKeyInfo key)
         {
             if (!Booleans.terminal_opened) return;
 
@@ -198,7 +195,6 @@ namespace Shinx.GUI
             }
         }
     }
-
     public class TerminalWriter : System.IO.TextWriter
     {
         private string _buffer = "";

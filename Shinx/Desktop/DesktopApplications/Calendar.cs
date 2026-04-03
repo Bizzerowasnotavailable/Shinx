@@ -1,16 +1,19 @@
-﻿using Cosmos.System.Graphics;
-using Cosmos.System;
+﻿using Cosmos.System;
+using Cosmos.System.Graphics;
 using System;
 using System.Drawing;
 
 namespace Shinx.GUI
 {
-    public static class Calendar
+    public class Calendar : IGuiApp
     {
+        public string AppID => "Calendar";
+        public string DisplayName => "Calendar";
+        public bool IsVisible { get => Booleans.calendar_opened; set => Booleans.calendar_opened = value; }
+
         private static int viewMonth = -1;
         private static int viewYear = -1;
-
-        public static void Draw(Canvas vbe)
+        public void Draw(Canvas vbe)
         {
             if (!Booleans.calendar_opened) return;
 
@@ -20,7 +23,9 @@ namespace Shinx.GUI
                 viewYear = DateTime.Now.Year;
             }
 
-            Window.Draw(vbe, ref Int_Manager.calendar_x, ref Int_Manager.calendar_y, 260, 280, "Calendar", ref Booleans.calendar_opened);
+            Window.Draw(vbe, ref Int_Manager.calendar_x, ref Int_Manager.calendar_y, 260, 280, DisplayName, ref Booleans.calendar_opened, AppID);
+
+            if (!Booleans.calendar_opened) return;
 
             int x = Int_Manager.calendar_x;
             int y = Int_Manager.calendar_y;
@@ -88,6 +93,9 @@ namespace Shinx.GUI
                 viewMonth = DateTime.Now.Month;
                 viewYear = DateTime.Now.Year;
             }
+        }
+        public void HandleKey(ConsoleKeyInfo key)
+        {
         }
     }
 }

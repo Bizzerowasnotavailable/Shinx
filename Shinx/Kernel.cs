@@ -31,6 +31,8 @@ namespace Shinx
             PermissionManager.Init();
             NetworkManager.Init();
             commandHandler = new peppe();
+            Shinx.GUI.AppManager.Initialize();
+
             Console.WriteLine("[OK] Boot successful");
 
             while (true)

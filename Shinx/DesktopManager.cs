@@ -40,11 +40,12 @@ namespace Shinx
                     if (System.Console.KeyAvailable)
                     {
                         var key = System.Console.ReadKey(true);
-
-                        if (Shinx.GUI.Booleans.editor_opened)
-                            Shinx.GUI.TextEditor.HandleKey(key);
-                        else if (Shinx.GUI.Booleans.terminal_opened)
-                            Shinx.GUI.Terminal.HandleKey(key);
+                        string topAppID = Shinx.GUI.WindowManager.drawOrder[Shinx.GUI.WindowManager.drawOrder.Count - 1];
+                        var activeApp = Shinx.GUI.AppManager.GetApp(topAppID);
+                        if (activeApp != null && activeApp.IsVisible)
+                        {
+                            activeApp.HandleKey(key);
+                        }
                     }
 
                     vbe.DrawFilledRectangle(taskbarPen, 0, 570, 800, 30);

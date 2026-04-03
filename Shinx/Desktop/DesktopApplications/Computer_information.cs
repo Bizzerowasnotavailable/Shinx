@@ -1,11 +1,20 @@
-﻿using Cosmos.System.Graphics;
+﻿using Cosmos.System;
+using Cosmos.System.Graphics;
 using System;
 using System.Drawing;
 
 namespace Shinx.GUI
 {
-    public static class Computer_information
+    public class Computer_information : IGuiApp
     {
+        public string AppID => "About";
+        public string DisplayName => "About Shinx OS";
+        public bool IsVisible
+        {
+            get => Booleans.info_opened;
+            set => Booleans.info_opened = value;
+        }
+
         public static string CachedCPU = "Loading...";
         public static string CachedRAM = "0 MB";
         public static string CachedTime = "00:00:00";
@@ -36,8 +45,7 @@ namespace Shinx.GUI
                 _ramLabel = "RAM: Unknown";
             }
         }
-
-        public static void Draw(Canvas vbe)
+        public void Draw(Canvas vbe)
         {
             if (!Booleans.info_opened) return;
 
@@ -49,19 +57,24 @@ namespace Shinx.GUI
                 UpdateTimerString();
             }
 
-            Window.Draw(vbe, ref Int_Manager.computeri_x, ref Int_Manager.computeri_y, 350, 180, "About Shinx OS", ref Booleans.info_opened);
+            Window.Draw(vbe, ref Int_Manager.computeri_x, ref Int_Manager.computeri_y, 350, 180, DisplayName, ref Booleans.info_opened, AppID);
+
+            if (!Booleans.info_opened) return;
 
             int x = Int_Manager.computeri_x;
             int y = Int_Manager.computeri_y;
 
-            ASC16.DrawACSIIString(vbe, "Shinx OS Desktop Environment", Color.Black, (uint)x + 10, (uint)y + 30);
-            ASC16.DrawACSIIString(vbe, "----------------------------", Color.Black, (uint)x + 10, (uint)y + 50);
+            ASC16.DrawACSIIString(vbe, "Shinx OS Desktop Environment", Color.Black, (uint)(x + 10), (uint)(y + 30));
+            ASC16.DrawACSIIString(vbe, "----------------------------", Color.Black, (uint)(x + 10), (uint)(y + 50));
 
-            ASC16.DrawACSIIString(vbe, _cpuLabel, Color.Black, (uint)x + 10, (uint)y + 70);
-            ASC16.DrawACSIIString(vbe, _ramLabel, Color.Black, (uint)x + 10, (uint)y + 90);
-            ASC16.DrawACSIIString(vbe, _timeLabel, Color.Black, (uint)x + 10, (uint)y + 110);
+            ASC16.DrawACSIIString(vbe, _cpuLabel, Color.Black, (uint)(x + 10), (uint)(y + 70));
+            ASC16.DrawACSIIString(vbe, _ramLabel, Color.Black, (uint)(x + 10), (uint)(y + 90));
+            ASC16.DrawACSIIString(vbe, _timeLabel, Color.Black, (uint)(x + 10), (uint)(y + 110));
         }
 
+        public void HandleKey(ConsoleKeyInfo key)
+        {
+        }
         private static void UpdateTimerString()
         {
             var now = DateTime.Now;

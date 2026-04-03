@@ -1,11 +1,12 @@
 ﻿using Cosmos.System.Graphics;
+using System.Collections.Generic;
 
 namespace Shinx.GUI
 {
     public static class WindowManager
     {
-        public static string[] drawOrder = {
-            "About Shinx OS",
+        public static List<string> drawOrder = new List<string> {
+            "About",
             "Clock",
             "Calculator",
             "Calendar",
@@ -18,33 +19,14 @@ namespace Shinx.GUI
 
         public static void DrawWindows(Canvas vbe)
         {
-            for (int i = 0; i < drawOrder.Length; i++)
+            for (int i = 0; i < drawOrder.Count; i++)
             {
-                string windowName = drawOrder[i];
+                string id = drawOrder[i];
+                IGuiApp app = AppManager.GetApp(id);
 
-                switch (windowName)
+                if (app != null && app.IsVisible)
                 {
-                    case "About Shinx OS":
-                        if (Booleans.info_opened) Computer_information.Draw(vbe);
-                        break;
-                    case "Clock":
-                        if (Booleans.clock_opened) Clock.Draw(vbe);
-                        break;
-                    case "Calculator":
-                        if (Booleans.calc_opened) Calculator.Draw(vbe);
-                        break;
-                    case "Calendar":
-                        if (Booleans.calendar_opened) Calendar.Draw(vbe);
-                        break;
-                    case "Settings":
-                        if (Booleans.settings_opened) settings.Draw(vbe);
-                        break;
-                    case "Terminal":
-                        if (Booleans.terminal_opened) Terminal.Draw(vbe);
-                        break;
-                    case "Text Editor":
-                        if (Booleans.editor_opened) TextEditor.Draw(vbe);
-                        break;
+                    app.Draw(vbe);
                 }
             }
 
@@ -55,29 +37,13 @@ namespace Shinx.GUI
             }
         }
 
-        public static void BringToFront(string title)
+        public static void BringToFront(string id)
         {
-            int index = -1;
-
-            for (int i = 0; i < drawOrder.Length; i++)
+            int index = drawOrder.IndexOf(id);
+            if (index != -1)
             {
-                if (drawOrder[i] == title)
-                {
-                    index = i;
-                    break;
-                }
-            }
-
-            if (index != -1 && index != drawOrder.Length - 1)
-            {
-                string temp = drawOrder[index];
-
-                for (int i = index; i < drawOrder.Length - 1; i++)
-                {
-                    drawOrder[i] = drawOrder[i + 1];
-                }
-
-                drawOrder[drawOrder.Length - 1] = temp;
+                drawOrder.RemoveAt(index);
+                drawOrder.Add(id);
             }
         }
     }

@@ -1,22 +1,26 @@
-﻿using Cosmos.System;
+﻿using System;
+using Cosmos.System;
 using Cosmos.System.Graphics;
 using System.Drawing;
 
 namespace Shinx.GUI
 {
-    public static class settings
+    public class SettingsApp : IGuiApp
     {
-        public static bool wasSettingsClickedLastFrame = false;
+        public string AppID => "Settings";
+        public string DisplayName => "Settings";
+        public bool IsVisible { get => Booleans.settings_opened; set => Booleans.settings_opened = value; }
 
-        public static void Draw(Canvas vbe)
+        public static bool wasSettingsClickedLastFrame = false;
+        public void Draw(Canvas vbe)
         {
-            if (!Booleans.settings_opened) 
+            if (!Booleans.settings_opened)
             {
-                wasSettingsClickedLastFrame = true; 
+                wasSettingsClickedLastFrame = true;
                 return;
             }
 
-            Window.Draw(vbe, ref Int_Manager.settings_x, ref Int_Manager.settings_y, 250, 280, "Settings", ref Booleans.settings_opened);
+            Window.Draw(vbe, ref Int_Manager.settings_x, ref Int_Manager.settings_y, 250, 280, DisplayName, ref Booleans.settings_opened, AppID);
 
             if (Booleans.settings_opened)
             {
@@ -29,7 +33,7 @@ namespace Shinx.GUI
                 ASC16.DrawACSIIString(vbe, clockStatus, clockCol, (uint)x + 180, (uint)y + 40);
 
                 ASC16.DrawACSIIString(vbe, "Desktop Color:", Color.Black, (uint)x + 15, (uint)y + 80);
-                
+
                 vbe.DrawFilledRectangle(Color.RoyalBlue, x + 20, y + 105, 30, 30);
                 vbe.DrawFilledRectangle(Color.DarkSlateGray, x + 60, y + 105, 30, 30);
                 vbe.DrawFilledRectangle(Color.DarkOliveGreen, x + 100, y + 105, 30, 30);
@@ -42,7 +46,7 @@ namespace Shinx.GUI
                 else if (Booleans.desktop_color == Color.DarkOliveGreen) selX = 100;
                 else if (Booleans.desktop_color == Color.Maroon) selX = 140;
                 else if (Booleans.desktop_color == Color.Purple) selX = 180;
-                
+
                 if (selX != 0) vbe.DrawRectangle(Color.White, x + selX - 2, y + 103, 34, 34);
 
                 vbe.DrawFilledRectangle(Color.DarkRed, x + 20, y + 230, 210, 30);
@@ -72,9 +76,12 @@ namespace Shinx.GUI
                         DesktopManager.Running = false;
                     }
                 }
-                
+
                 wasSettingsClickedLastFrame = isClickedNow;
             }
+        }
+        public void HandleKey(ConsoleKeyInfo key)
+        {
         }
     }
 }
