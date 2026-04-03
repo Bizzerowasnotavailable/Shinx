@@ -41,8 +41,7 @@ namespace Shinx.Commands
                 { "desktop", new core_desktop() },
                 { "network", new core_network() },
                 { "ping", new core_ping() },
-                { "start_webserver", new core_http() },
-                { "wget", new core_wget() }
+                { "start_webserver", new core_http() }
             };
         }
 
