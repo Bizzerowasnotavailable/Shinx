@@ -38,7 +38,10 @@ namespace Shinx.Commands
                 { "chown", new core_chown() },
                 { "chgrp", new core_chgrp() },
                 { "lua", new core_lua() },
-                { "desktop", new core_desktop() }
+                { "desktop", new core_desktop() },
+                { "net", new core_network() },
+                { "ping", new core_ping() },
+                { "start_webserver", new core_http() }
             };
         }
 
