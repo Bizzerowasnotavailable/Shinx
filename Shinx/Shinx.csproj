@@ -26,6 +26,7 @@
         <ItemGroup>
           <None Remove="LuaUtils\bunnysay.lua" />
           <None Remove="LuaUtils\fetch.lua" />
+          <None Remove="LuaUtils\tabtest.lua" />
         </ItemGroup>
 
        <ItemGroup>
@@ -45,6 +46,12 @@
 			<PackageReference Include="Cosmos.Kernel" Version="0-*" NoWarn="NU1604" />
 			<PackageReference Include="Cosmos.Plugs" Version="0.1.0-localbuild20260326072445" />
 			<PackageReference Include="Cosmos.System2" Version="0-*" NoWarn="NU1604" />
+		</ItemGroup>
+
+		<ItemGroup>
+		  <EmbeddedResource Update="LuaUtils\tabtest.lua">
+		    <Generator>TextTemplatingFileGenerator</Generator>
+		  </EmbeddedResource>
 		</ItemGroup>
 
     </Project>
