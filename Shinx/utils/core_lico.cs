@@ -35,6 +35,7 @@ namespace Shinx.Commands
             Console.WriteLine("http: start http server");
             Console.WriteLine("desktop: launch graphical environment");
             Console.WriteLine("net: manage network config");
+            Console.WriteLine("lpkg: package manager");
             foreach (var d in peppe.descriptions)
                 Console.WriteLine(d.Key + ": " + d.Value);
         }
