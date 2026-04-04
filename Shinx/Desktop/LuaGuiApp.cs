@@ -62,7 +62,15 @@ namespace Shinx.GUI
 
         public void HandleKey(ConsoleKeyInfo key)
         {
-            if (!IsVisible || string.IsNullOrEmpty(_keyFn)) return;
+            if (!IsVisible) return;
+
+            if (!string.IsNullOrEmpty(LuaBridge.InputFocus))
+            {
+                LuaBridge.EnqueueKey(key);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_keyFn)) return;
 
             var L = LuaBridge.State;
             L.GetGlobal(_keyFn);
