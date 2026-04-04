@@ -19,13 +19,13 @@ namespace Shinx.Commands
         {
             if (!NetworkManager.IsConnected)
             {
-                Console.WriteLine("pkg: no network connection");
+                Console.WriteLine("lpkg: no network connection");
                 return;
             }
 
             if (args.Length == 0)
             {
-                Console.WriteLine("usage: pkg list | install <name> | remove <name> | upgrade [name]");
+                Console.WriteLine("usage: lpkg list | install <name> | remove <name> | upgrade [name]");
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace Shinx.Commands
                     else Upgrade(args[1]);
                     break;
                 default:
-                    Console.WriteLine("pkg: unknown command: " + args[0]);
+                    Console.WriteLine("lpkg: unknown command: " + args[0]);
                     break;
             }
         }
@@ -105,30 +105,30 @@ namespace Shinx.Commands
             var manifest = LoadManifest();
             if (manifest.ContainsKey(name) && !IsNewer(version, manifest[name]))
             {
-                Console.WriteLine("pkg: " + name + " " + manifest[name] + " is already up to date");
+                Console.WriteLine("lpkg: " + name + " " + manifest[name] + " is already up to date");
                 return;
             }
 
-            Console.WriteLine("pkg: fetching " + name + " " + version + "...");
+            Console.WriteLine("lpkg: fetching " + name + " " + version + "...");
             byte[] data = HttpGetRaw("/packages/" + name + ".lua");
             if (data == null) return;
 
             if (expectedHash != null)
             {
-                Console.WriteLine("pkg: verifying...");
+                Console.WriteLine("lpkg: verifying...");
                 string actualHash = core_sha256.HashBytes(data);
                 if (actualHash != expectedHash)
                 {
-                    Console.WriteLine("pkg: checksum mismatch! aborting");
-                    Console.WriteLine("pkg:   expected " + expectedHash);
-                    Console.WriteLine("pkg:   got      " + actualHash);
+                    Console.WriteLine("lpkg: checksum mismatch! aborting");
+                    Console.WriteLine("lpkg:   expected " + expectedHash);
+                    Console.WriteLine("lpkg:   got      " + actualHash);
                     return;
                 }
-                Console.WriteLine("pkg: checksum ok");
+                Console.WriteLine("lpkg: checksum ok");
             }
             else
             {
-                Console.WriteLine("pkg: warning: no checksum for " + name);
+                Console.WriteLine("lpkg: warning: no checksum for " + name);
             }
 
             File.WriteAllText(BinDir + name + ".lua", Encoding.UTF8.GetString(data));
@@ -139,21 +139,21 @@ namespace Shinx.Commands
                 var status = LuaBridge.State.L_DoString(code);
                 if (status != ThreadStatus.LUA_OK)
                 {
-                    Console.WriteLine("pkg: register error: " + LuaBridge.State.L_ToString(-1));
+                    Console.WriteLine("lpkg: register error: " + LuaBridge.State.L_ToString(-1));
                     LuaBridge.State.Pop(1);
                     return;
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("pkg: register error: " + e.Message);
+                Console.WriteLine("lpkg: register error: " + e.Message);
                 return;
             }
 
             manifest[name] = version;
             SaveManifest(manifest);
 
-            Console.WriteLine("pkg: installed " + name + " " + version);
+            Console.WriteLine("lpkg: installed " + name + " " + version);
         }
 
         private void Remove(string name)
@@ -161,7 +161,7 @@ namespace Shinx.Commands
             string path = BinDir + name + ".lua";
             if (!File.Exists(path))
             {
-                Console.WriteLine("pkg: not installed: " + name);
+                Console.WriteLine("lpkg: not installed: " + name);
                 return;
             }
 
@@ -170,13 +170,13 @@ namespace Shinx.Commands
             if (peppe.commands.ContainsKey(name))
                 peppe.UnregisterCommand(name);
             else
-                Console.WriteLine("pkg: warning: " + name + " was not registered as a command");
+                Console.WriteLine("lpkg: warning: " + name + " was not registered as a command");
 
             var manifest = LoadManifest();
             manifest.Remove(name);
             SaveManifest(manifest);
 
-            Console.WriteLine("pkg: removed " + name);
+            Console.WriteLine("lpkg: removed " + name);
         }
 
         private void Upgrade(string name = null)
@@ -185,7 +185,7 @@ namespace Shinx.Commands
             if (index == null) return;
 
             var manifest = LoadManifest();
-            if (manifest.Count == 0) { Console.WriteLine("pkg: nothing installed"); return; }
+            if (manifest.Count == 0) { Console.WriteLine("lpkg: nothing installed"); return; }
 
             bool any = false;
             foreach (var line in index.Split('\n'))
@@ -203,13 +203,13 @@ namespace Shinx.Commands
                 if (!manifest.ContainsKey(pkgName)) continue;
                 if (!IsNewer(remoteVer, manifest[pkgName])) continue;
 
-                Console.WriteLine("pkg: upgrading " + pkgName + " " + manifest[pkgName] + " -> " + remoteVer);
+                Console.WriteLine("lpkg: upgrading " + pkgName + " " + manifest[pkgName] + " -> " + remoteVer);
                 Install(pkgName);
                 any = true;
             }
 
             if (!any)
-                Console.WriteLine("pkg: everything is up to date");
+                Console.WriteLine("lpkg: everything is up to date");
         }
 
         private Dictionary<string, string> LoadManifest()
@@ -268,7 +268,7 @@ namespace Shinx.Commands
                             string header = Encoding.ASCII.GetString(raw, 0, i);
                             if (header.Contains(" 404 "))
                             {
-                                Console.WriteLine("pkg: not found on server");
+                                Console.WriteLine("lpkg: not found on server");
                                 return null;
                             }
 
@@ -283,7 +283,7 @@ namespace Shinx.Commands
             }
             catch (Exception e)
             {
-                Console.WriteLine("pkg: " + e.Message);
+                Console.WriteLine("lpkg: " + e.Message);
                 return null;
             }
         }
