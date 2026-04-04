@@ -23,6 +23,12 @@ namespace Shinx.Commands
                 return;
             }
 
+            if (!UserManager.IsRoot(UserManager.currentUser))
+            {
+                Console.WriteLine("lpkg: must be root");
+                return;
+            }
+
             if (args.Length == 0)
             {
                 Console.WriteLine("usage: lpkg list | install <name> | remove <name> | upgrade [name]");
