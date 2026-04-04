@@ -41,7 +41,8 @@ namespace Shinx.Commands
                 { "desktop", new core_desktop() },
                 { "net", new core_network() },
                 { "ping", new core_ping() },
-                { "http", new core_http() }
+                { "http", new core_http() },
+                { "lpkg", new core_pkg() }
             };
         }
 
@@ -100,6 +101,15 @@ namespace Shinx.Commands
         {
             commands[name] = command;
             descriptions[name] = desc;
+        }
+        public static void UnregisterCommand(string name)
+        {
+            if (commands.ContainsKey(name))
+            {
+                commands.Remove(name);
+                descriptions.Remove(name);
+            }
+            
         }
     }
 }
