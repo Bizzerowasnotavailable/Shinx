@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shinx.GUI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -177,6 +178,13 @@ namespace Shinx.Commands
                 peppe.UnregisterCommand(name);
             else
                 Console.WriteLine("lpkg: warning: " + name + " was not registered as a command");
+
+            var app = AppManager.GetApp(name);
+            if (app != null)
+            {
+                AppManager.Apps.Remove(app);
+                WindowManager.drawOrder.Remove(name);
+            }
 
             var manifest = LoadManifest();
             manifest.Remove(name);
