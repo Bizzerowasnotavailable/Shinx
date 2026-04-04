@@ -1,6 +1,9 @@
-﻿using Shinx.Commands;
+using Shinx.Commands;
+using Shinx.GUI;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using Cosmos.System.Graphics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -11,6 +14,23 @@ namespace Shinx
     public static class LuaBridge
     {
         public static ILuaState State;
+
+        private static Canvas  _guiCanvas;
+        private static int     _guiX, _guiY, _guiW, _guiH;
+        private static bool    _inGuiDraw = false;
+
+        public static void SetGuiCanvas(Canvas canvas, int x, int y, int w, int h)
+        {
+            _guiCanvas  = canvas;
+            _guiX = x; _guiY = y; _guiW = w; _guiH = h;
+            _inGuiDraw  = true;
+        }
+
+        public static void ClearGuiCanvas()
+        {
+            _guiCanvas = null;
+            _inGuiDraw = false;
+        }
 
         private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "http", "net", "lua", "passwd", "su" };
         public static void Init()
@@ -146,6 +166,36 @@ namespace Shinx
 
             State.PushCSharpFunction(L_HttpServe);
             State.SetField(-2, "httpserve");
+
+            State.PushCSharpFunction(L_GuiRegister);
+            State.SetField(-2, "gui_register");
+
+            State.PushCSharpFunction(L_GuiClose);
+            State.SetField(-2, "gui_close");
+
+            State.PushCSharpFunction(L_GuiRect);
+            State.SetField(-2, "gui_rect");
+
+            State.PushCSharpFunction(L_GuiRectFill);
+            State.SetField(-2, "gui_rectfill");
+
+            State.PushCSharpFunction(L_GuiLine);
+            State.SetField(-2, "gui_line");
+
+            State.PushCSharpFunction(L_GuiText);
+            State.SetField(-2, "gui_text");
+
+            State.PushCSharpFunction(L_GuiMouse);
+            State.SetField(-2, "gui_mouse");
+
+            State.PushCSharpFunction(L_GuiClick);
+            State.SetField(-2, "gui_click");
+
+            State.PushCSharpFunction(L_GuiWidth);
+            State.SetField(-2, "gui_width");
+
+            State.PushCSharpFunction(L_GuiHeight);
+            State.SetField(-2, "gui_height");
 
             State.SetGlobal("shinx");
         }
@@ -836,6 +886,158 @@ namespace Shinx
                 case "white": color = ConsoleColor.White; return true;
                 default: color = ConsoleColor.White; return false;
             }
+        }
+        private static int L_GuiRegister(ILuaState lua)
+        {
+            string id          = lua.L_CheckString(1);
+            string displayName = lua.L_CheckString(2);
+            string drawFn      = lua.L_CheckString(3);
+            string keyFn       = lua.GetTop() >= 4 && lua.Type(4) == LuaType.LUA_TSTRING
+                                 ? lua.L_CheckString(4) : "";
+            int x = lua.GetTop() >= 5 ? lua.L_CheckInteger(5) : 80;
+            int y = lua.GetTop() >= 6 ? lua.L_CheckInteger(6) : 60;
+            int w = lua.GetTop() >= 7 ? lua.L_CheckInteger(7) : 400;
+            int h = lua.GetTop() >= 8 ? lua.L_CheckInteger(8) : 300;
+
+            var existing = AppManager.GetApp(id);
+            if (existing != null)
+                AppManager.Apps.Remove(existing);
+
+            var app = new LuaGuiApp(id, displayName, drawFn, keyFn, x, y, w, h);
+            AppManager.Apps.Add(app);
+
+            if (!WindowManager.drawOrder.Contains(id))
+                WindowManager.drawOrder.Add(id);
+
+            lua.PushBoolean(true);
+            return 1;
+        }
+        private static int L_GuiClose(ILuaState lua)
+        {
+            string id = lua.L_CheckString(1);
+            var app = AppManager.GetApp(id);
+            if (app != null)
+                app.IsVisible = false;
+            return 0;
+        }
+        private static bool TryParseGuiColor(string s, out System.Drawing.Color c)
+        {
+            c = System.Drawing.Color.White;
+            if (string.IsNullOrEmpty(s)) return false;
+
+            string[] parts = s.Split(',');
+            if (parts.Length == 3)
+            {
+                byte r, g, b;
+                if (byte.TryParse(parts[0].Trim(), out r) &&
+                    byte.TryParse(parts[1].Trim(), out g) &&
+                    byte.TryParse(parts[2].Trim(), out b))
+                {
+                    c = System.Drawing.Color.FromArgb(255, r, g, b);
+                    return true;
+                }
+            }
+
+            switch (s.ToLower())
+            {
+                case "white":     c = System.Drawing.Color.White;     return true;
+                case "black":     c = System.Drawing.Color.Black;     return true;
+                case "red":       c = System.Drawing.Color.Red;       return true;
+                case "green":     c = System.Drawing.Color.Green;     return true;
+                case "blue":      c = System.Drawing.Color.Blue;      return true;
+                case "yellow":    c = System.Drawing.Color.Yellow;    return true;
+                case "cyan":      c = System.Drawing.Color.Cyan;      return true;
+                case "magenta":   c = System.Drawing.Color.Magenta;   return true;
+                case "gray":      c = System.Drawing.Color.Gray;      return true;
+                case "darkgray":  c = System.Drawing.Color.DarkGray;  return true;
+                case "lightgray": c = System.Drawing.Color.LightGray; return true;
+                case "orange":    c = System.Drawing.Color.Orange;    return true;
+                case "darkblue":  c = System.Drawing.Color.DarkBlue;  return true;
+                case "darkgreen": c = System.Drawing.Color.DarkGreen; return true;
+                case "darkred":   c = System.Drawing.Color.DarkRed;   return true;
+                default:          return false;
+            }
+        }
+        private static int L_GuiRectFill(ILuaState lua)
+        {
+            if (!_inGuiDraw || _guiCanvas == null) return 0;
+            int rx = _guiX + 1 + lua.L_CheckInteger(1);
+            int ry = _guiY + 20 + lua.L_CheckInteger(2);
+            int rw = lua.L_CheckInteger(3);
+            int rh = lua.L_CheckInteger(4);
+            string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
+            System.Drawing.Color c;
+            if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            _guiCanvas.DrawFilledRectangle(c, rx, ry, rw, rh);
+            return 0;
+        }
+        private static int L_GuiRect(ILuaState lua)
+        {
+            if (!_inGuiDraw || _guiCanvas == null) return 0;
+            int rx = _guiX + 1 + lua.L_CheckInteger(1);
+            int ry = _guiY + 20 + lua.L_CheckInteger(2);
+            int rw = lua.L_CheckInteger(3);
+            int rh = lua.L_CheckInteger(4);
+            string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
+            System.Drawing.Color c;
+            if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            _guiCanvas.DrawRectangle(c, rx, ry, rw, rh);
+            return 0;
+        }
+        private static int L_GuiLine(ILuaState lua)
+        {
+            if (!_inGuiDraw || _guiCanvas == null) return 0;
+            int x1 = _guiX + 1 + lua.L_CheckInteger(1);
+            int y1 = _guiY + 20 + lua.L_CheckInteger(2);
+            int x2 = _guiX + 1 + lua.L_CheckInteger(3);
+            int y2 = _guiY + 20 + lua.L_CheckInteger(4);
+            string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
+            System.Drawing.Color c;
+            if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            _guiCanvas.DrawLine(c, x1, y1, x2, y2);
+            return 0;
+        }
+        private static int L_GuiText(ILuaState lua)
+        {
+            if (!_inGuiDraw || _guiCanvas == null) return 0;
+            int tx = _guiX + 1 + lua.L_CheckInteger(1);
+            int ty = _guiY + 20 + lua.L_CheckInteger(2);
+            string text = lua.L_CheckString(3);
+            string cs = lua.GetTop() >= 4 ? lua.L_CheckString(4) : "white";
+            System.Drawing.Color c;
+            if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            ASC16.DrawACSIIString(_guiCanvas, text, c, (uint)tx, (uint)ty);
+            return 0;
+        }
+        private static int L_GuiMouse(ILuaState lua)
+        {
+            if (!_inGuiDraw)
+            {
+                lua.PushInteger(0);
+                lua.PushInteger(0);
+                return 2;
+            }
+            int mx = (int)Cosmos.System.MouseManager.X - _guiX - 1;
+            int my = (int)Cosmos.System.MouseManager.Y - _guiY - 20;
+            lua.PushInteger(mx);
+            lua.PushInteger(my);
+            return 2;
+        }
+        private static int L_GuiClick(ILuaState lua)
+        {
+            lua.PushBoolean(_inGuiDraw && Mouse.Click());
+            return 1;
+        }
+        private static int L_GuiWidth(ILuaState lua)
+        {
+            lua.PushInteger(_inGuiDraw ? _guiW - 2 : 0);
+            return 1;
+        }
+
+        private static int L_GuiHeight(ILuaState lua)
+        {
+            lua.PushInteger(_inGuiDraw ? _guiH - 22 : 0);
+            return 1;
         }
     }
 }
