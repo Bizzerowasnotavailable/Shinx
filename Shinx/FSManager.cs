@@ -19,7 +19,7 @@ namespace Shinx
             }
 
             if (!File.Exists(@"0:\bin\lpkg.txt"))
-                File.Create(@"0:\bin\lpkg.txt");
+                File.Create(@"0:\bin\lpkg.txt").Close();
         }
         public static void DeployLuaFiles()
         {
