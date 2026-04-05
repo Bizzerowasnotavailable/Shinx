@@ -10,6 +10,7 @@ namespace Shinx.GUI
     {
         private static bool _wasPressed = false;
         private static bool _frameClick = false;
+        private static bool _clickConsumed = false;
 
         private static Color mousePen = Color.White;
         private static Color borderPen = Color.Black;
@@ -26,6 +27,7 @@ namespace Shinx.GUI
             bool currentlyPressed = (CMouse.MouseState == Sys.MouseState.Left);
 
             _frameClick = (currentlyPressed && !_wasPressed);
+            _clickConsumed = false;
 
             _wasPressed = currentlyPressed;
         }
@@ -33,6 +35,14 @@ namespace Shinx.GUI
         public static bool Click()
         {
             return _frameClick;
+        }
+
+        public static bool ConsumeClick()
+        {
+            if (_clickConsumed) return false;
+            if (!_frameClick) return false;
+            _clickConsumed = true;
+            return true;
         }
 
         public static bool IsPressed()
