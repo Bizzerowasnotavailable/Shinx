@@ -205,9 +205,6 @@ namespace Shinx
             State.PushCSharpFunction(L_GuiLine);
             State.SetField(-2, "gui_line");
 
-            State.PushCSharpFunction(L_GuiText);
-            State.SetField(-2, "gui_text");
-
             State.PushCSharpFunction(L_GuiMouse);
             State.SetField(-2, "gui_mouse");
 
@@ -1039,18 +1036,6 @@ namespace Shinx
             System.Drawing.Color c;
             if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
             _guiCanvas.DrawLine(c, x1, y1, x2, y2);
-            return 0;
-        }
-        private static int L_GuiText(ILuaState lua)
-        {
-            if (!_inGuiDraw || _guiCanvas == null) return 0;
-            int tx = _guiX + 1 + lua.L_CheckInteger(1);
-            int ty = _guiY + 20 + lua.L_CheckInteger(2);
-            string text = lua.L_CheckString(3);
-            string cs = lua.GetTop() >= 4 ? lua.L_CheckString(4) : "white";
-            System.Drawing.Color c;
-            if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
-            ASC16.DrawACSIIString(_guiCanvas, text, c, (uint)tx, (uint)ty);
             return 0;
         }
         private static int L_GuiMouse(ILuaState lua)
