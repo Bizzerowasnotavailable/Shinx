@@ -22,10 +22,7 @@ namespace Shinx
 
         private static System.Collections.Generic.Dictionary<string, string> _inputState = new System.Collections.Generic.Dictionary<string, string>();
         private static System.Collections.Generic.Dictionary<string, bool> _checkboxState = new System.Collections.Generic.Dictionary<string, bool>();
-        private static bool _lastClick = false;
-
         private static readonly System.Collections.Generic.Queue<Cosmos.System.KeyEvent> _inputQueue = new System.Collections.Generic.Queue<Cosmos.System.KeyEvent>();
-
         public static void EnqueueKey(ConsoleKeyInfo key)
         {
             if (string.IsNullOrEmpty(_inputFocus)) return;
@@ -47,14 +44,11 @@ namespace Shinx
             _guiX = x; _guiY = y; _guiW = w; _guiH = h;
             _inGuiDraw = true;
         }
-
         public static void ClearGuiCanvas()
         {
             _guiCanvas = null;
             _inGuiDraw = false;
-            _lastClick = Mouse.Click();
         }
-
         private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "http", "net", "lua", "passwd", "su" };
         public static void Init()
         {
@@ -628,14 +622,8 @@ namespace Shinx
         private static int L_CPUInfo(ILuaState lua)
         {
             string cpu = "idk";
-            try
-            {
-                cpu = Cosmos.Core.CPU.GetCPUBrandString() ?? "idk";
-            }
-            catch
-            {
-                cpu = "idk";
-            }
+            try { cpu = Cosmos.Core.CPU.GetCPUBrandString() ?? "idk"; }
+            catch { cpu = "idk"; }
             lua.PushString(cpu);
             return 1;
         }
@@ -644,19 +632,11 @@ namespace Shinx
             string ram = "idk";
             try
             {
-                ulong total = 0, used = 0;
-                try
-                {
-                    total = Cosmos.Core.GCImplementation.GetAvailableRAM();
-                    used = Cosmos.Core.GCImplementation.GetUsedRAM() / 1024 / 1024;
-                    ram = $"{used} MB used / {total} MB total";
-                }
-                catch { ram = "idk"; }
+                ulong total = Cosmos.Core.GCImplementation.GetAvailableRAM();
+                ulong used  = Cosmos.Core.GCImplementation.GetUsedRAM() / 1024 / 1024;
+                ram = $"{used} MB used / {total} MB total";
             }
-            catch
-            {
-                ram = "idk";
-            }
+            catch { ram = "idk"; }
             lua.PushString(ram);
             return 1;
         }
@@ -710,68 +690,30 @@ namespace Shinx
         {
             lua.NewTable();
 
-            lua.PushString("connected");
-            lua.PushBoolean(NetworkManager.IsConnected);
-            lua.SetTable(-3);
-
-            lua.PushString("ip");
-            lua.PushString(NetworkManager.CurrentIP ?? "");
-            lua.SetTable(-3);
-
-            lua.PushString("mask");
-            lua.PushString(NetworkManager.CurrentMask ?? "");
-            lua.SetTable(-3);
-
-            lua.PushString("gateway");
-            lua.PushString(NetworkManager.CurrentGateway ?? "");
-            lua.SetTable(-3);
-
-            lua.PushString("dns");
-            lua.PushString(NetworkManager.DNSServer ?? "");
-            lua.SetTable(-3);
-
-            lua.PushString("mode");
-            lua.PushString(NetworkManager.Mode ?? "none");
-            lua.SetTable(-3);
+            lua.PushString("connected"); lua.PushBoolean(NetworkManager.IsConnected);       lua.SetTable(-3);
+            lua.PushString("ip");        lua.PushString(NetworkManager.CurrentIP ?? "");     lua.SetTable(-3);
+            lua.PushString("mask");      lua.PushString(NetworkManager.CurrentMask ?? "");   lua.SetTable(-3);
+            lua.PushString("gateway");   lua.PushString(NetworkManager.CurrentGateway ?? ""); lua.SetTable(-3);
+            lua.PushString("dns");       lua.PushString(NetworkManager.DNSServer ?? "");     lua.SetTable(-3);
+            lua.PushString("mode");      lua.PushString(NetworkManager.Mode ?? "none");      lua.SetTable(-3);
 
             return 1;
         }
         private static int L_NetResolve(ILuaState lua)
         {
-            if (!NetworkManager.IsConnected)
-            {
-                lua.PushNil();
-                lua.PushString("not connected");
-                return 2;
-            }
+            if (!NetworkManager.IsConnected) { lua.PushNil(); lua.PushString("not connected"); return 2; }
             string hostname = lua.L_CheckString(1);
             string ip = NetworkManager.Resolve(hostname);
-            if (ip != null)
-            {
-                lua.PushString(ip);
-                return 1;
-            }
-            lua.PushNil();
-            lua.PushString("resolution failed");
-            return 2;
+            if (ip != null) { lua.PushString(ip); return 1; }
+            lua.PushNil(); lua.PushString("resolution failed"); return 2;
         }
+
         private static int L_NetGet(ILuaState lua)
         {
-            if (!NetworkManager.IsConnected)
-            {
-                lua.PushNil();
-                lua.PushString("not connected");
-                return 2;
-            }
+            if (!NetworkManager.IsConnected) { lua.PushNil(); lua.PushString("not connected"); return 2; }
 
             string url = lua.L_CheckString(1);
-
-            if (!url.StartsWith("http://"))
-            {
-                lua.PushNil();
-                lua.PushString("only http:// is supported");
-                return 2;
-            }
+            if (!url.StartsWith("http://")) { lua.PushNil(); lua.PushString("only http:// is supported"); return 2; }
 
             try
             {
@@ -781,12 +723,7 @@ namespace Shinx
                 string path = slash >= 0 ? hostAndPath.Substring(slash) : "/";
 
                 string ip = NetworkManager.Resolve(host);
-                if (ip == null)
-                {
-                    lua.PushNil();
-                    lua.PushString("dns resolution failed");
-                    return 2;
-                }
+                if (ip == null) { lua.PushNil(); lua.PushString("dns resolution failed"); return 2; }
 
                 using (var client = new TcpClient())
                 {
@@ -827,22 +764,11 @@ namespace Shinx
         }
         private static int L_HttpServe(ILuaState lua)
         {
-            if (!UserManager.IsRoot(UserManager.currentUser))
-            {
-                lua.PushBoolean(false);
-                lua.PushString("permission denied");
-                return 2;
-            }
-
-            if (!NetworkManager.IsConnected)
-            {
-                lua.PushBoolean(false);
-                lua.PushString("not connected");
-                return 2;
-            }
+            if (!UserManager.IsRoot(UserManager.currentUser))  { lua.PushBoolean(false); lua.PushString("permission denied"); return 2; }
+            if (!NetworkManager.IsConnected)                    { lua.PushBoolean(false); lua.PushString("not connected");     return 2; }
 
             string root = lua.GetTop() >= 1 ? ResolvePath(lua.L_CheckString(1)) : Shell.currentDirectory;
-            int port = lua.GetTop() >= 2 ? lua.L_CheckInteger(2) : 8080;
+            int port    = lua.GetTop() >= 2 ? lua.L_CheckInteger(2) : 8080;
 
             Kernel.commandHandler.Execute("http " + root + " " + port);
             lua.PushBoolean(true);
@@ -891,9 +817,7 @@ namespace Shinx
                     }
                     var runStatus = State.PCall(0, -1, 0);
                     if (runStatus != ThreadStatus.LUA_OK)
-                    {
                         Console.WriteLine($"bin: runtime error in {fullPath}: " + State.L_ToString(-1));
-                    }
                 }
                 catch (Exception e)
                 {
@@ -909,32 +833,69 @@ namespace Shinx
         {
             switch (name.ToLower())
             {
-                case "black": color = ConsoleColor.Black; return true;
-                case "darkblue": color = ConsoleColor.DarkBlue; return true;
-                case "darkgreen": color = ConsoleColor.DarkGreen; return true;
-                case "darkcyan": color = ConsoleColor.DarkCyan; return true;
-                case "darkred": color = ConsoleColor.DarkRed; return true;
+                case "black":       color = ConsoleColor.Black;       return true;
+                case "darkblue":    color = ConsoleColor.DarkBlue;    return true;
+                case "darkgreen":   color = ConsoleColor.DarkGreen;   return true;
+                case "darkcyan":    color = ConsoleColor.DarkCyan;    return true;
+                case "darkred":     color = ConsoleColor.DarkRed;     return true;
                 case "darkmagenta": color = ConsoleColor.DarkMagenta; return true;
-                case "darkyellow": color = ConsoleColor.DarkYellow; return true;
-                case "gray": color = ConsoleColor.Gray; return true;
-                case "darkgray": color = ConsoleColor.DarkGray; return true;
-                case "blue": color = ConsoleColor.Blue; return true;
-                case "green": color = ConsoleColor.Green; return true;
-                case "cyan": color = ConsoleColor.Cyan; return true;
-                case "red": color = ConsoleColor.Red; return true;
-                case "magenta": color = ConsoleColor.Magenta; return true;
-                case "yellow": color = ConsoleColor.Yellow; return true;
-                case "white": color = ConsoleColor.White; return true;
-                default: color = ConsoleColor.White; return false;
+                case "darkyellow":  color = ConsoleColor.DarkYellow;  return true;
+                case "gray":        color = ConsoleColor.Gray;        return true;
+                case "darkgray":    color = ConsoleColor.DarkGray;    return true;
+                case "blue":        color = ConsoleColor.Blue;        return true;
+                case "green":       color = ConsoleColor.Green;       return true;
+                case "cyan":        color = ConsoleColor.Cyan;        return true;
+                case "red":         color = ConsoleColor.Red;         return true;
+                case "magenta":     color = ConsoleColor.Magenta;     return true;
+                case "yellow":      color = ConsoleColor.Yellow;      return true;
+                case "white":       color = ConsoleColor.White;       return true;
+                default:            color = ConsoleColor.White;       return false;
+            }
+        }
+        private static bool TryParseGuiColor(string s, out System.Drawing.Color c)
+        {
+            c = System.Drawing.Color.White;
+            if (string.IsNullOrEmpty(s)) return false;
+
+            string[] parts = s.Split(',');
+            if (parts.Length == 3)
+            {
+                byte r, g, b;
+                if (byte.TryParse(parts[0].Trim(), out r) &&
+                    byte.TryParse(parts[1].Trim(), out g) &&
+                    byte.TryParse(parts[2].Trim(), out b))
+                {
+                    c = System.Drawing.Color.FromArgb(255, r, g, b);
+                    return true;
+                }
+            }
+
+            switch (s.ToLower())
+            {
+                case "white":     c = System.Drawing.Color.White;     return true;
+                case "black":     c = System.Drawing.Color.Black;     return true;
+                case "red":       c = System.Drawing.Color.Red;       return true;
+                case "green":     c = System.Drawing.Color.Green;     return true;
+                case "blue":      c = System.Drawing.Color.Blue;      return true;
+                case "yellow":    c = System.Drawing.Color.Yellow;    return true;
+                case "cyan":      c = System.Drawing.Color.Cyan;      return true;
+                case "magenta":   c = System.Drawing.Color.Magenta;   return true;
+                case "gray":      c = System.Drawing.Color.Gray;      return true;
+                case "darkgray":  c = System.Drawing.Color.DarkGray;  return true;
+                case "lightgray": c = System.Drawing.Color.LightGray; return true;
+                case "orange":    c = System.Drawing.Color.Orange;    return true;
+                case "darkblue":  c = System.Drawing.Color.DarkBlue;  return true;
+                case "darkgreen": c = System.Drawing.Color.DarkGreen; return true;
+                case "darkred":   c = System.Drawing.Color.DarkRed;   return true;
+                default: return false;
             }
         }
         private static int L_GuiRegister(ILuaState lua)
         {
-            string id = lua.L_CheckString(1);
+            string id          = lua.L_CheckString(1);
             string displayName = lua.L_CheckString(2);
-            string drawFn = lua.L_CheckString(3);
-            string keyFn = lua.GetTop() >= 4 && lua.Type(4) == LuaType.LUA_TSTRING
-                                 ? lua.L_CheckString(4) : "";
+            string drawFn      = lua.L_CheckString(3);
+            string keyFn       = lua.GetTop() >= 4 && lua.Type(4) == LuaType.LUA_TSTRING ? lua.L_CheckString(4) : "";
             int x = lua.GetTop() >= 5 ? lua.L_CheckInteger(5) : 80;
             int y = lua.GetTop() >= 6 ? lua.L_CheckInteger(6) : 60;
             int w = lua.GetTop() >= 7 ? lua.L_CheckInteger(7) : 400;
@@ -957,47 +918,8 @@ namespace Shinx
         {
             string id = lua.L_CheckString(1);
             var app = AppManager.GetApp(id);
-            if (app != null)
-                app.IsVisible = false;
+            if (app != null) app.IsVisible = false;
             return 0;
-        }
-        private static bool TryParseGuiColor(string s, out System.Drawing.Color c)
-        {
-            c = System.Drawing.Color.White;
-            if (string.IsNullOrEmpty(s)) return false;
-
-            string[] parts = s.Split(',');
-            if (parts.Length == 3)
-            {
-                byte r, g, b;
-                if (byte.TryParse(parts[0].Trim(), out r) &&
-                    byte.TryParse(parts[1].Trim(), out g) &&
-                    byte.TryParse(parts[2].Trim(), out b))
-                {
-                    c = System.Drawing.Color.FromArgb(255, r, g, b);
-                    return true;
-                }
-            }
-
-            switch (s.ToLower())
-            {
-                case "white": c = System.Drawing.Color.White; return true;
-                case "black": c = System.Drawing.Color.Black; return true;
-                case "red": c = System.Drawing.Color.Red; return true;
-                case "green": c = System.Drawing.Color.Green; return true;
-                case "blue": c = System.Drawing.Color.Blue; return true;
-                case "yellow": c = System.Drawing.Color.Yellow; return true;
-                case "cyan": c = System.Drawing.Color.Cyan; return true;
-                case "magenta": c = System.Drawing.Color.Magenta; return true;
-                case "gray": c = System.Drawing.Color.Gray; return true;
-                case "darkgray": c = System.Drawing.Color.DarkGray; return true;
-                case "lightgray": c = System.Drawing.Color.LightGray; return true;
-                case "orange": c = System.Drawing.Color.Orange; return true;
-                case "darkblue": c = System.Drawing.Color.DarkBlue; return true;
-                case "darkgreen": c = System.Drawing.Color.DarkGreen; return true;
-                case "darkred": c = System.Drawing.Color.DarkRed; return true;
-                default: return false;
-            }
         }
         private static int L_GuiRectFill(ILuaState lua)
         {
@@ -1040,12 +962,7 @@ namespace Shinx
         }
         private static int L_GuiMouse(ILuaState lua)
         {
-            if (!_inGuiDraw)
-            {
-                lua.PushInteger(0);
-                lua.PushInteger(0);
-                return 2;
-            }
+            if (!_inGuiDraw) { lua.PushInteger(0); lua.PushInteger(0); return 2; }
             int mx = (int)Cosmos.System.MouseManager.X - _guiX - 1;
             int my = (int)Cosmos.System.MouseManager.Y - _guiY - 20;
             lua.PushInteger(mx);
@@ -1076,16 +993,20 @@ namespace Shinx
             int by = _guiY + 20 + lua.L_CheckInteger(2);
             int bw = lua.L_CheckInteger(3);
             int bh = lua.L_CheckInteger(4);
-            string label = lua.L_CheckString(5);
-            string cs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "gray";
+            string label    = lua.L_CheckString(5);
+            string bgCs     = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "gray";
+            string borderCs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "white";
+            string textCs   = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "white";
 
             int mx = (int)Cosmos.System.MouseManager.X;
             int my = (int)Cosmos.System.MouseManager.Y;
-            bool hover = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
-            bool clicked = hover && Mouse.Click();
+            bool hover   = mx >= bx && mx <= bx + bw && my >= by && my <= by + bh;
+            bool clicked = hover && Mouse.ConsumeClick();
 
-            System.Drawing.Color bg;
-            if (!TryParseGuiColor(cs, out bg)) bg = System.Drawing.Color.Gray;
+            System.Drawing.Color bg, border, textColor;
+            if (!TryParseGuiColor(bgCs,     out bg))        bg        = System.Drawing.Color.Gray;
+            if (!TryParseGuiColor(borderCs, out border))    border    = System.Drawing.Color.White;
+            if (!TryParseGuiColor(textCs,   out textColor)) textColor = System.Drawing.Color.White;
 
             System.Drawing.Color face = hover
                 ? System.Drawing.Color.FromArgb(255,
@@ -1095,13 +1016,11 @@ namespace Shinx
                 : bg;
 
             _guiCanvas.DrawFilledRectangle(face, bx, by, bw, bh);
-            _guiCanvas.DrawRectangle(System.Drawing.Color.White, bx, by, bw, bh);
+            _guiCanvas.DrawRectangle(border, bx, by, bw, bh);
 
-            int charW = 8;
-            int textX = bx + (bw - label.Length * charW) / 2;
+            int textX = bx + (bw - label.Length * 8) / 2;
             int textY = by + (bh - 16) / 2;
-            GUI.ASC16.DrawACSIIString(_guiCanvas, label, System.Drawing.Color.White,
-                (uint)textX, (uint)textY);
+            GUI.ASC16.DrawACSIIString(_guiCanvas, label, textColor, (uint)textX, (uint)textY);
 
             lua.PushBoolean(clicked);
             return 1;
@@ -1122,20 +1041,22 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
 
-            int bx = _guiX + 1 + lua.L_CheckInteger(1);
-            int by = _guiY + 20 + lua.L_CheckInteger(2);
-            int bw = lua.L_CheckInteger(3);
-            int bh = lua.L_CheckInteger(4);
+            int bx      = _guiX + 1 + lua.L_CheckInteger(1);
+            int by      = _guiY + 20 + lua.L_CheckInteger(2);
+            int bw      = lua.L_CheckInteger(3);
+            int bh      = lua.L_CheckInteger(4);
             string text = lua.L_CheckString(5);
-            string tcs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "white";
-            string bcs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "0,0,80";
+            string tcs  = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "white";
+            string bcs  = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "black";
+            string bdcs = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "gray";
 
-            System.Drawing.Color tc, bc;
-            if (!TryParseGuiColor(tcs, out tc)) tc = System.Drawing.Color.White;
-            if (!TryParseGuiColor(bcs, out bc)) bc = System.Drawing.Color.FromArgb(255, 0, 0, 80);
+            System.Drawing.Color tc, bc, bdc;
+            if (!TryParseGuiColor(tcs,  out tc))  tc  = System.Drawing.Color.White;
+            if (!TryParseGuiColor(bcs,  out bc))  bc  = System.Drawing.Color.Black;
+            if (!TryParseGuiColor(bdcs, out bdc)) bdc = System.Drawing.Color.Gray;
 
-            _guiCanvas.DrawFilledRectangle(bc, bx, by, bw, bh);
-            _guiCanvas.DrawRectangle(System.Drawing.Color.Gray, bx, by, bw, bh);
+            _guiCanvas.DrawFilledRectangle(bc,  bx, by, bw, bh);
+            _guiCanvas.DrawRectangle(bdc, bx, by, bw, bh);
 
             int maxCols = (bw - 4) / 8;
             int maxRows = (bh - 4) / 16;
@@ -1145,20 +1066,14 @@ namespace Shinx
             {
                 string s = rawLine.TrimEnd('\r');
                 if (s.Length == 0) { lines.Add(""); continue; }
-                while (s.Length > maxCols)
-                {
-                    lines.Add(s.Substring(0, maxCols));
-                    s = s.Substring(maxCols);
-                }
+                while (s.Length > maxCols) { lines.Add(s.Substring(0, maxCols)); s = s.Substring(maxCols); }
                 lines.Add(s);
             }
 
             int start = Math.Max(0, lines.Count - maxRows);
             for (int i = start; i < lines.Count; i++)
-            {
                 GUI.ASC16.DrawACSIIString(_guiCanvas, lines[i], tc,
                     (uint)(bx + 2), (uint)(by + 2 + (i - start) * 16));
-            }
 
             return 0;
         }
@@ -1166,11 +1081,14 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) { lua.PushString(""); return 1; }
 
-            string id = lua.L_CheckString(1);
-            int ix = _guiX + 1 + lua.L_CheckInteger(2);
-            int iy = _guiY + 20 + lua.L_CheckInteger(3);
-            int iw = lua.L_CheckInteger(4);
+            string id          = lua.L_CheckString(1);
+            int ix             = _guiX + 1 + lua.L_CheckInteger(2);
+            int iy             = _guiY + 20 + lua.L_CheckInteger(3);
+            int iw             = lua.L_CheckInteger(4);
             string placeholder = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "";
+            string bgCs        = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "black";
+            string borderCs    = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "gray";
+            string textCs      = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "white";
 
             if (!_inputState.ContainsKey(id))
                 _inputState[id] = "";
@@ -1179,21 +1097,25 @@ namespace Shinx
             {
                 int mx = (int)Cosmos.System.MouseManager.X;
                 int my = (int)Cosmos.System.MouseManager.Y;
-                if (Mouse.Click() && mx >= ix && mx <= ix + iw && my >= iy && my <= iy + 20)
+                if (mx >= ix && mx <= ix + iw && my >= iy && my <= iy + 20 && Mouse.ConsumeClick())
                     _inputFocus = id;
             }
 
             bool focused = _inputFocus == id;
+            string val   = _inputState[id];
 
-            string val = _inputState[id];
+            System.Drawing.Color bg, border, textColor;
+            if (!TryParseGuiColor(bgCs,     out bg))        bg        = System.Drawing.Color.Black;
+            if (!TryParseGuiColor(borderCs, out border))    border    = System.Drawing.Color.Gray;
+            if (!TryParseGuiColor(textCs,   out textColor)) textColor = System.Drawing.Color.White;
 
-            _guiCanvas.DrawFilledRectangle(System.Drawing.Color.FromArgb(255, 30, 30, 30), ix, iy, iw, 20);
-            _guiCanvas.DrawRectangle(focused ? System.Drawing.Color.Cyan : System.Drawing.Color.Gray, ix, iy, iw, 20);
+            System.Drawing.Color activeBorder = focused ? System.Drawing.Color.Cyan : border;
 
-            string display = val.Length > 0 ? val : placeholder;
-            System.Drawing.Color displayColor = val.Length > 0
-                ? System.Drawing.Color.White
-                : System.Drawing.Color.DarkGray;
+            _guiCanvas.DrawFilledRectangle(bg, ix, iy, iw, 20);
+            _guiCanvas.DrawRectangle(activeBorder, ix, iy, iw, 20);
+
+            string display      = val.Length > 0 ? val : placeholder;
+            System.Drawing.Color displayColor = val.Length > 0 ? textColor : System.Drawing.Color.DarkGray;
 
             int maxChars = (iw - 4) / 8;
             if (display.Length > maxChars)
@@ -1214,9 +1136,9 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) { lua.PushBoolean(false); return 1; }
 
-            string id = lua.L_CheckString(1);
-            int cx = _guiX + 1 + lua.L_CheckInteger(2);
-            int cy = _guiY + 20 + lua.L_CheckInteger(3);
+            string id    = lua.L_CheckString(1);
+            int cx       = _guiX + 1 + lua.L_CheckInteger(2);
+            int cy       = _guiY + 20 + lua.L_CheckInteger(3);
             string label = lua.L_CheckString(4);
 
             if (!_checkboxState.ContainsKey(id))
@@ -1224,8 +1146,8 @@ namespace Shinx
 
             int mx = (int)Cosmos.System.MouseManager.X;
             int my = (int)Cosmos.System.MouseManager.Y;
-            bool hover = mx >= cx && mx <= cx + 16 && my >= cy && my <= cy + 16;
-            bool clicked = hover && Mouse.Click();
+            bool hover   = mx >= cx && mx <= cx + 16 && my >= cy && my <= cy + 16;
+            bool clicked = hover && Mouse.ConsumeClick();
 
             if (clicked)
                 _checkboxState[id] = !_checkboxState[id];
@@ -1237,7 +1159,7 @@ namespace Shinx
 
             if (state)
             {
-                _guiCanvas.DrawLine(System.Drawing.Color.LightGreen, cx + 2, cy + 8, cx + 6, cy + 13);
+                _guiCanvas.DrawLine(System.Drawing.Color.LightGreen, cx + 2, cy + 8,  cx + 6,  cy + 13);
                 _guiCanvas.DrawLine(System.Drawing.Color.LightGreen, cx + 6, cy + 13, cx + 14, cy + 3);
             }
 
@@ -1251,13 +1173,13 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
 
-            int px = _guiX + 1 + lua.L_CheckInteger(1);
-            int py = _guiY + 20 + lua.L_CheckInteger(2);
-            int pw = lua.L_CheckInteger(3);
-            int ph = lua.L_CheckInteger(4);
+            int px     = _guiX + 1 + lua.L_CheckInteger(1);
+            int py     = _guiY + 20 + lua.L_CheckInteger(2);
+            int pw     = lua.L_CheckInteger(3);
+            int ph     = lua.L_CheckInteger(4);
             double val = lua.L_CheckNumber(5);
             double max = lua.L_CheckNumber(6);
-            string cs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "green";
+            string cs  = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "green";
 
             System.Drawing.Color fc;
             if (!TryParseGuiColor(cs, out fc)) fc = System.Drawing.Color.Green;
@@ -1292,6 +1214,5 @@ namespace Shinx
         }
 
         private static string _inputFocus = "";
-
     }
 }
