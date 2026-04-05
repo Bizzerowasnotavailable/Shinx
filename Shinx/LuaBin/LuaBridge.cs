@@ -1077,7 +1077,9 @@ namespace Shinx
             int bw = lua.L_CheckInteger(3);
             int bh = lua.L_CheckInteger(4);
             string label = lua.L_CheckString(5);
-            string cs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "gray";
+            string bgCs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "gray";
+            string borderCs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "white";
+            string textCs = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "white";
 
             int mx = (int)Cosmos.System.MouseManager.X;
             int my = (int)Cosmos.System.MouseManager.Y;
@@ -1085,7 +1087,13 @@ namespace Shinx
             bool clicked = hover && Mouse.Click();
 
             System.Drawing.Color bg;
-            if (!TryParseGuiColor(cs, out bg)) bg = System.Drawing.Color.Gray;
+            if (!TryParseGuiColor(bgCs, out bg)) bg = System.Drawing.Color.Gray;
+
+            System.Drawing.Color border;
+            if (!TryParseGuiColor(borderCs, out border)) border = System.Drawing.Color.White;
+
+            System.Drawing.Color textColor;
+            if (!TryParseGuiColor(textCs, out textColor)) textColor = System.Drawing.Color.White;
 
             System.Drawing.Color face = hover
                 ? System.Drawing.Color.FromArgb(255,
@@ -1095,13 +1103,12 @@ namespace Shinx
                 : bg;
 
             _guiCanvas.DrawFilledRectangle(face, bx, by, bw, bh);
-            _guiCanvas.DrawRectangle(System.Drawing.Color.White, bx, by, bw, bh);
+            _guiCanvas.DrawRectangle(border, bx, by, bw, bh);
 
             int charW = 8;
             int textX = bx + (bw - label.Length * charW) / 2;
             int textY = by + (bh - 16) / 2;
-            GUI.ASC16.DrawACSIIString(_guiCanvas, label, System.Drawing.Color.White,
-                (uint)textX, (uint)textY);
+            GUI.ASC16.DrawACSIIString(_guiCanvas, label, textColor, (uint)textX, (uint)textY);
 
             lua.PushBoolean(clicked);
             return 1;
@@ -1128,14 +1135,16 @@ namespace Shinx
             int bh = lua.L_CheckInteger(4);
             string text = lua.L_CheckString(5);
             string tcs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "white";
-            string bcs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "0,0,80";
+            string bcs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "black";
+            string bdcs = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "gray";
 
-            System.Drawing.Color tc, bc;
+            System.Drawing.Color tc, bc, bdc;
             if (!TryParseGuiColor(tcs, out tc)) tc = System.Drawing.Color.White;
-            if (!TryParseGuiColor(bcs, out bc)) bc = System.Drawing.Color.FromArgb(255, 0, 0, 80);
+            if (!TryParseGuiColor(bcs, out bc)) bc = System.Drawing.Color.Black;
+            if (!TryParseGuiColor(bdcs, out bdc)) bdc = System.Drawing.Color.Gray;
 
             _guiCanvas.DrawFilledRectangle(bc, bx, by, bw, bh);
-            _guiCanvas.DrawRectangle(System.Drawing.Color.Gray, bx, by, bw, bh);
+            _guiCanvas.DrawRectangle(bdc, bx, by, bw, bh);
 
             int maxCols = (bw - 4) / 8;
             int maxRows = (bh - 4) / 16;
@@ -1145,20 +1154,14 @@ namespace Shinx
             {
                 string s = rawLine.TrimEnd('\r');
                 if (s.Length == 0) { lines.Add(""); continue; }
-                while (s.Length > maxCols)
-                {
-                    lines.Add(s.Substring(0, maxCols));
-                    s = s.Substring(maxCols);
-                }
+                while (s.Length > maxCols) { lines.Add(s.Substring(0, maxCols)); s = s.Substring(maxCols); }
                 lines.Add(s);
             }
 
             int start = Math.Max(0, lines.Count - maxRows);
             for (int i = start; i < lines.Count; i++)
-            {
                 GUI.ASC16.DrawACSIIString(_guiCanvas, lines[i], tc,
                     (uint)(bx + 2), (uint)(by + 2 + (i - start) * 16));
-            }
 
             return 0;
         }
@@ -1171,6 +1174,9 @@ namespace Shinx
             int iy = _guiY + 20 + lua.L_CheckInteger(3);
             int iw = lua.L_CheckInteger(4);
             string placeholder = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "";
+            string bgCs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "black";
+            string borderCs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "gray";
+            string textCs = lua.GetTop() >= 8 ? lua.L_CheckString(8) : "white";
 
             if (!_inputState.ContainsKey(id))
                 _inputState[id] = "";
@@ -1184,16 +1190,24 @@ namespace Shinx
             }
 
             bool focused = _inputFocus == id;
-
             string val = _inputState[id];
 
-            _guiCanvas.DrawFilledRectangle(System.Drawing.Color.FromArgb(255, 30, 30, 30), ix, iy, iw, 20);
-            _guiCanvas.DrawRectangle(focused ? System.Drawing.Color.Cyan : System.Drawing.Color.Gray, ix, iy, iw, 20);
+            System.Drawing.Color bg;
+            if (!TryParseGuiColor(bgCs, out bg)) bg = System.Drawing.Color.Black;
+
+            System.Drawing.Color border;
+            if (!TryParseGuiColor(borderCs, out border)) border = System.Drawing.Color.Gray;
+
+            System.Drawing.Color textColor;
+            if (!TryParseGuiColor(textCs, out textColor)) textColor = System.Drawing.Color.White;
+
+            System.Drawing.Color activeBorder = focused ? System.Drawing.Color.Cyan : border;
+
+            _guiCanvas.DrawFilledRectangle(bg, ix, iy, iw, 20);
+            _guiCanvas.DrawRectangle(activeBorder, ix, iy, iw, 20);
 
             string display = val.Length > 0 ? val : placeholder;
-            System.Drawing.Color displayColor = val.Length > 0
-                ? System.Drawing.Color.White
-                : System.Drawing.Color.DarkGray;
+            System.Drawing.Color displayColor = val.Length > 0 ? textColor : System.Drawing.Color.DarkGray;
 
             int maxChars = (iw - 4) / 8;
             if (display.Length > maxChars)
