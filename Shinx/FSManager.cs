@@ -8,7 +8,7 @@ namespace Shinx
     {
         public static void Init()
         {
-            string[] defaultDirs = { @"0:\sys", @"0:\home", @"0:\etc", @"0:\bin" };
+            string[] defaultDirs = { "/sys", "/home", "/etc", "/bin" };
 
             foreach (string dir in defaultDirs)
             {
@@ -18,14 +18,21 @@ namespace Shinx
                 }
             }
 
-            if (!File.Exists(@"0:\bin\lpkg.txt"))
-                File.Create(@"0:\bin\lpkg.txt").Close();
+            string lpkgPath = "/bin/lpkg.txt";
+            if (!File.Exists(lpkgPath))
+                File.Create(lpkgPath).Close();
         }
         public static void DeployLuaFiles()
         {
-            foreach (var file in LuaResources.AllFiles)
+            var files = new (string Name, byte[] Data)[]
             {
-                string path = $@"0:\bin\{file.Name}";
+                ("fetch.lua", LuaResources.Fetch),
+                ("bunnysay.lua", LuaResources.Bunnysay)
+            };
+
+            foreach (var file in files)
+            {
+                string path = $"/bin/{file.Name}";
 
                 if (!File.Exists(path))
                 {

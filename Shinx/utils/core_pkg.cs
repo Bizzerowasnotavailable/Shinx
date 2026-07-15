@@ -13,8 +13,8 @@ namespace Shinx.Commands
         private const string RepoHost = "185.199.108.153";
         private const string RepoName = "repo.izzoserver.top";
         private const int RepoPort = 80;
-        private const string BinDir = @"0:\bin\";
-        private const string ManifestPath = @"0:\bin\lpkg.txt";
+        private const string BinDir = "/bin/";
+        private const string ManifestPath = "/bin/lpkg.txt";
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
@@ -151,7 +151,7 @@ namespace Shinx.Commands
                     return;
                 }
             }
-            catch (Exception e)
+catch (Exception e)
             {
                 Console.WriteLine("lpkg: register error: " + e.Message);
                 return;

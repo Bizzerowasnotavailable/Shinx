@@ -26,7 +26,7 @@ namespace Shinx.Commands
                 return;
             }
 
-            path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+            path = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
 
             if (DesktopManager.Running)
             {

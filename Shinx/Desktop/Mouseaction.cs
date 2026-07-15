@@ -1,8 +1,8 @@
 ﻿using System;
-using Sys = Cosmos.System;
+using Sys = Cosmos.Kernel.System;
 using System.Drawing;
-using Cosmos.System.Graphics;
-using CMouse = Cosmos.System.MouseManager;
+using Cosmos.Kernel.System.Graphics;
+using CMouse = Cosmos.Kernel.System.Mouse.MouseManager;
 
 namespace Shinx.GUI
 {
@@ -24,7 +24,7 @@ namespace Shinx.GUI
 
         public static void UpdateState()
         {
-            bool currentlyPressed = (CMouse.MouseState == Sys.MouseState.Left);
+            bool currentlyPressed = CMouse.LeftButton;
 
             _frameClick = (currentlyPressed && !_wasPressed);
             _clickConsumed = false;
@@ -47,7 +47,7 @@ namespace Shinx.GUI
 
         public static bool IsPressed()
         {
-            return CMouse.MouseState == Sys.MouseState.Left;
+            return CMouse.LeftButton;
         }
 
         public static void DrawMouse(Canvas vbe, int x, int y)

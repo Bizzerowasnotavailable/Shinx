@@ -9,18 +9,17 @@ namespace Shinx
     {
         private static Dictionary<string, HashSet<string>> groups = new Dictionary<string, HashSet<string>>();
         private static HashSet<string> registeredGroups = new HashSet<string> { "root", "user" };
-        private static string groupsFile = @"0:\sys\groups.txt";
-        private static string registeredGroupsFile = @"0:\sys\grouplist.txt";
+        private static string groupsFile = "/sys/groups.txt";
+        private static string registeredGroupsFile = "/sys/grouplist.txt";
         private static Dictionary<string, string> users = new Dictionary<string, string>();
         public static string currentUser = "";
         private static string savedUser = "";
-        private static string usersFile = @"0:\sys\users.txt";
+        private static string usersFile = "/sys/users.txt";
 
         public static void Init()
         {
             if (!File.Exists(usersFile))
             {
-                // create default root user
                 users.Add("root", core_sha256.Hash("root"));
                 groups.Add("root", new HashSet<string> { "root" });
                 Save();
@@ -88,9 +87,9 @@ namespace Shinx
             {
                 currentUser = username;
                 if (username == "root")
-                    Shell.currentDirectory = @"0:\";
+                    Shell.currentDirectory = "/";
                 else
-                    Shell.currentDirectory = @"0:\home\" + username + @"\";
+                    Shell.currentDirectory = "/home/" + username + "/";
                 return true;
             }
             return false;
@@ -101,7 +100,7 @@ namespace Shinx
             users.Add(username, core_sha256.Hash(password));
             groups.Add(username, userGroups ?? new HashSet<string> { "user" });
 
-            string homeDir = @"0:\home\" + username;
+            string homeDir = "/home/" + username;
             if (!Directory.Exists(homeDir))
             {
                 Directory.CreateDirectory(homeDir);

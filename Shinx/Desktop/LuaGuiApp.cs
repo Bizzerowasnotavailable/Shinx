@@ -1,5 +1,5 @@
-using Cosmos.System;
-using Cosmos.System.Graphics;
+using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
 using System;
 using System.Drawing;
 using UniLua;
@@ -8,9 +8,9 @@ namespace Shinx.GUI
 {
     public class LuaGuiApp : IGuiApp
     {
-        public string AppID      { get; private set; }
+        public string AppID { get; private set; }
         public string DisplayName { get; private set; }
-        public bool   IsVisible  { get; set; }
+        public bool IsVisible { get; set; }
 
         private string _drawFn;
         private string _keyFn;
@@ -20,12 +20,12 @@ namespace Shinx.GUI
         public LuaGuiApp(string id, string displayName, string drawFn, string keyFn,
                          int x, int y, int width, int height)
         {
-            AppID       = id;
+            AppID = id;
             DisplayName = displayName;
-            _drawFn     = drawFn;
-            _keyFn      = keyFn;
+            _drawFn = drawFn;
+            _keyFn = keyFn;
             X = x; Y = y; Width = width; Height = height;
-            IsVisible   = false;
+            IsVisible = false;
         }
 
         public void Draw(Canvas canvas)

@@ -1,5 +1,5 @@
 ﻿using System;
-using Cosmos.System.Graphics;
+using Cosmos.Kernel.System.Graphics;
 using System.Drawing;
 
 namespace Shinx.GUI

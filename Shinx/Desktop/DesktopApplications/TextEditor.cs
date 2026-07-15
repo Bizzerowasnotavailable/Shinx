@@ -1,4 +1,4 @@
-﻿using Cosmos.System.Graphics;
+﻿using Cosmos.Kernel.System.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

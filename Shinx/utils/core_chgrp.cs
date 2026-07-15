@@ -28,7 +28,7 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+            string path = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
 
             HashSet<string> groups = new HashSet<string>();
             foreach (string g in args[0].Split(','))
@@ -65,13 +65,11 @@ namespace Shinx.Commands
             PermissionManager.SetPermission(path, groups);
             foreach (var file in Directory.GetFiles(path))
             {
-                string fullPath = path.TrimEnd('\\') + '\\' + file;
-                PermissionManager.SetPermission(fullPath, new HashSet<string>(groups));
+                PermissionManager.SetPermission(file, new HashSet<string>(groups));
             }
             foreach (var dir in Directory.GetDirectories(path))
             {
-                string fullPath = path.TrimEnd('\\') + '\\' + dir;
-                ApplyGroupRecursive(fullPath, new HashSet<string>(groups));
+                ApplyGroupRecursive(dir, new HashSet<string>(groups));
             }
         }
     }

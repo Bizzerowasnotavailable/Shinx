@@ -16,12 +16,9 @@ An hobby operating system built on [Cosmos](https://github.com/CosmosOS/Cosmos)
 
 ## compiling instructions
 
-### Cosmos' official Userkit is 3 years out of date!!
-- download [OUR UserKit](https://github.com/Bizzerowasnotavailable/Shinx/raw/refs/heads/master/Tools/CosmosUserKit-20260326-vs2022.exe)
-- download [all the dependencies](https://github.com/CosmosOS/Cosmos) except the Cosmos userkit
-- build as "Debug"
-- if the ISO doesn't boot outside of vmware, disable "Remote debugging" in "Debug" > "shinx debug properties"
-![debug instructions](shinx-assets/debugging.PNG)
+- follow [CosmosOS gen3 Installation guide](https://valentinbreiz.github.io/nativeaot-patcher/articles/user/install.html)
+- clone the repo
+- cd into the Shinx folder
+- cosmos build
 
 ### 100% made in italy, shoutout to hirpus lab
-

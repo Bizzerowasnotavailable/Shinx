@@ -1,5 +1,5 @@
-﻿using Cosmos.System;
-using Cosmos.System.Graphics;
+﻿using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
 using System.Drawing;
 
 namespace Shinx.GUI
@@ -101,7 +101,7 @@ namespace Shinx.GUI
                 CurMouse.X > 5 && CurMouse.X < 145 &&
                 CurMouse.Y > yOffset && CurMouse.Y < yOffset + BtnH)
             {
-                Cosmos.System.Power.Shutdown();
+                Power.Shutdown();
             }
         }
     }

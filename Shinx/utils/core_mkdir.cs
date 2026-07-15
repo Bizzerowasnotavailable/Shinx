@@ -1,5 +1,4 @@
-﻿using Cosmos.System.FileSystem.VFS;
-using Shinx.Commands;
+﻿using Shinx.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,11 +24,10 @@ namespace Shinx.utils
                 }
             }
 
-            // i got you dont worry
             bool createParents = parameters.Contains('p');
             string dirArg = args[0].Replace(' ', '_');
-            string fullPath = dirArg.StartsWith(@"0:\") ? dirArg : Shell.currentDirectory + dirArg;
-            fullPath = fullPath.Replace('/', '\\');
+            string fullPath = dirArg.StartsWith("/") ? dirArg : Shell.currentDirectory.TrimEnd('/') + "/" + dirArg;
+            fullPath = fullPath.Replace('\\', '/').TrimEnd('/');
 
             if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
             {
@@ -72,7 +70,7 @@ namespace Shinx.utils
         {
             var parts = new List<string>();
             string current = fullPath;
-            while (!string.IsNullOrEmpty(current))
+            while (!string.IsNullOrEmpty(current) && current != "/mnt")
             {
                 parts.Insert(0, current);
                 string parent = Path.GetDirectoryName(current);

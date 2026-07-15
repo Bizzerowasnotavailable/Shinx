@@ -40,7 +40,7 @@ namespace Shinx.Commands
                 { "lua", new core_lua() },
                 { "desktop", new core_desktop() },
                 { "net", new core_network() },
-                { "ping", new core_ping() },
+                
                 { "http", new core_http() },
                 { "lpkg", new core_pkg() }
             };

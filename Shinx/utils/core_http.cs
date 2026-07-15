@@ -37,7 +37,7 @@ namespace Shinx.Commands
             }
 
             string rootFolder = args.Length > 0
-                ? (args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0])
+                ? (args[0].StartsWith("/") ? args[0] : Shell.currentDirectory + args[0])
                 : Shell.currentDirectory;
 
             int port = args.Length > 1 ? int.Parse(args[1]) : 8080;
@@ -105,12 +105,12 @@ namespace Shinx.Commands
                         throw new Exception("stop requested");
                     }
 
-                    string filePath = rootFolder.TrimEnd('\\') + urlPath.Replace('/', '\\');
+                    string filePath = rootFolder.TrimEnd('/') + "/" + urlPath.TrimStart('/');
 
                     if (urlPath == "/" || Directory.Exists(filePath))
                     {
                         if (urlPath == "/") filePath = rootFolder;
-                        string index = filePath.TrimEnd('\\') + "\\index.html";
+                        string index = Path.Combine(filePath, "index.html");
                         if (File.Exists(index))
                             filePath = index;
                         else
@@ -196,14 +196,15 @@ namespace Shinx.Commands
 
             try
             {
-                var entries = Cosmos.System.FileSystem.VFS.VFSManager.GetDirectoryListing(dirPath);
+                var entries = Directory.GetFileSystemEntries(dirPath);
                 if (entries != null)
                 {
                     foreach (var entry in entries)
                     {
-                        bool isDir = entry.mEntryType == Cosmos.System.FileSystem.Listing.DirectoryEntryTypeEnum.Directory;
-                        string href = urlPath.TrimEnd('/') + "/" + entry.mName + (isDir ? "/" : "");
-                        string label = isDir ? "[" + entry.mName + "]" : entry.mName;
+                        bool isDir = Directory.Exists(entry);
+                        string name = Path.GetFileName(entry);
+                        string href = urlPath.TrimEnd('/') + "/" + name + (isDir ? "/" : "");
+                        string label = isDir ? "[" + name + "]" : name;
                         sb.Append("<li><a href=\"" + href + "\">" + label + "</a></li>");
                     }
                 }

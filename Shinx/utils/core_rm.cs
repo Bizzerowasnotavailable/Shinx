@@ -22,7 +22,7 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+            string path = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
 
             if (!PermissionManager.CanAccess(path, UserManager.currentUser))
             {
