@@ -128,10 +128,9 @@ namespace Shinx
         }
         private static string ResolvePath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path)) return "/mnt";
-            if (path.StartsWith(@"0:\") || path.StartsWith(@"0:/")) return path.Substring(3).Replace('\\', '/');
+            if (string.IsNullOrWhiteSpace(path)) return "/";
             if (path.StartsWith("/")) return path;
-            return System.IO.Path.GetFullPath(System.IO.Path.Combine(Shell.currentDirectory, path)).Replace('\\', '/');
+            return Path.Combine(Shell.currentDirectory, path).Replace('\\', '/');
         }
         private static int L_WriteLine(ILuaState lua) { Console.WriteLine(lua.L_ToString(1)); return 0; }
         private static int L_Write(ILuaState lua) { Console.Write(lua.L_ToString(1)); return 0; }

@@ -35,7 +35,7 @@ namespace Shinx.GUI
 
         public static void Open(string path)
         {
-            string fullPath = path.Contains(@":\") ? path : Shell.currentDirectory + path;
+            string fullPath = path.StartsWith("/") ? path : Shell.currentDirectory.TrimEnd('/') + "/" + path;
 
             if (File.Exists(fullPath))
             {

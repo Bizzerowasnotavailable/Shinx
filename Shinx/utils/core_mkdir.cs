@@ -70,7 +70,7 @@ namespace Shinx.utils
         {
             var parts = new List<string>();
             string current = fullPath;
-            while (!string.IsNullOrEmpty(current) && current != "/mnt")
+            while (!string.IsNullOrEmpty(current) && current != "/")
             {
                 parts.Insert(0, current);
                 string parent = Path.GetDirectoryName(current);
