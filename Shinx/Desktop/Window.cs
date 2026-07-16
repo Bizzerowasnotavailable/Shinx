@@ -56,9 +56,9 @@ namespace Shinx.GUI
                     y = mouseY - dragOffsetY;
 
                     if (x < 0) x = 0;
-                    if (x > 800 - width) x = 800 - width;
+                    if (x > ScreenManager.MaxWindowX(width)) x = ScreenManager.MaxWindowX(width);
                     if (y < 0) y = 0;
-                    if (y > 570 - height) y = 570 - height;
+                    if (y > ScreenManager.MaxWindowY(height)) y = ScreenManager.MaxWindowY(height);
                 }
                 else
                 {

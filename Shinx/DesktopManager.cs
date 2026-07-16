@@ -24,13 +24,15 @@ namespace Shinx
 
             try
             {
+                ScreenManager.Refresh();
+
                 if (vbe == null)
                 {
                     vbe = Canvas.GetFullScreen();
                     TimerManager.Wait(50);
                 }
 
-                MouseManager.SetScreenSize(vbe.Width, vbe.Height);
+                MouseManager.SetScreenSize(ScreenManager.Width, ScreenManager.Height);
 
                 while (Running)
                 {
@@ -54,19 +56,21 @@ namespace Shinx
                         }
                     }
 
-                    vbe.DrawFilledRectangle(taskbarPen, 0, 570, 800, 30);
-                    vbe.DrawFilledRectangle(startBtnPen, 0, 570, 60, 30);
-                    Shinx.GUI.ASC16.DrawACSIIString(vbe, "Start", Color.Black, 10, 578);
+                    int taskbarY = ScreenManager.TaskbarY;
+                    vbe.DrawFilledRectangle(taskbarPen, 0, ScreenManager.TaskbarY, ScreenManager.Width, ScreenManager.TaskbarHeight);
+                    vbe.DrawFilledRectangle(Color.LightGray, 0, ScreenManager.TaskbarY, ScreenManager.StartButtonWidth, ScreenManager.StartButtonHeight);
+                    Shinx.GUI.ASC16.DrawACSIIString(vbe, "Start", Color.Black, 10, (uint)ScreenManager.StartButtonY + 8);
 
                     int mx = MouseManager.X;
                     int my = MouseManager.Y;
 
-                    if (mx > 792) { MouseManager.SetPosition(792, my); mx = 792; }
-                    if (my > 592) { MouseManager.SetPosition(mx, 592); my = 592; }
+                    if (mx > ScreenManager.MaxMouseX) { MouseManager.SetPosition(ScreenManager.MaxMouseX, my); mx = ScreenManager.MaxMouseX; }
+                    if (my > ScreenManager.MaxMouseY) { MouseManager.SetPosition(mx, ScreenManager.MaxMouseY); my = ScreenManager.MaxMouseY; }
 
                     if (Shinx.GUI.Mouse.Click())
                     {
-                        if (mx >= 0 && mx <= 60 && my >= 570 && my <= 600)
+                        if (mx >= ScreenManager.StartButtonX && mx <= ScreenManager.StartButtonWidth &&
+                            my >= ScreenManager.StartButtonY && my <= ScreenManager.MaxMouseY)
                         {
                             Shinx.GUI.DrawMenu.menu = !Shinx.GUI.DrawMenu.menu;
                         }

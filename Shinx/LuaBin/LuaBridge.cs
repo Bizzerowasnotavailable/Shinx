@@ -393,7 +393,7 @@ namespace Shinx
             lua.PushString(ram); return 1;
         }
         private static int L_Sleep(ILuaState lua) { int ms = lua.L_CheckInteger(1); System.Threading.Thread.Sleep(ms); return 0; }
-        private static int L_SetCursor(ILuaState lua) { int x = lua.L_CheckInteger(1); int y = lua.L_CheckInteger(2); Console.SetCursorPosition(x, y); return 0; }
+        private static int L_SetCursor(ILuaState lua) { int x = lua.L_CheckInteger(1); int y = lua.L_CheckInteger(2); x = Math.Clamp(x, 0, ScreenManager.Width - 1); y = Math.Clamp(y, 0, ScreenManager.Height - 1); Console.SetCursorPosition(x, y); return 0; }
         private static int L_HasKey(ILuaState lua) { lua.PushBoolean(Console.KeyAvailable); return 1; }
         private static int L_GetKey(ILuaState lua)
         {
