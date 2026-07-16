@@ -1,9 +1,9 @@
-﻿using Cosmos.HAL;
-using Cosmos.System.Network;
-using Cosmos.System.Network.Config;
-using Cosmos.System.Network.IPv4;
-using Cosmos.System.Network.IPv4.UDP.DHCP;
-using Cosmos.System.Network.IPv4.UDP.DNS;
+﻿using Cosmos.Kernel.System.Network;
+using Cosmos.Kernel.System.Network.Config;
+using Cosmos.Kernel.System.Network.IPv4;
+using Cosmos.Kernel.System.Network.IPv4.UDP.DHCP;
+using Cosmos.Kernel.System.Network.IPv4.UDP.DNS;
+using Cosmos.Kernel.System.Timer;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -19,17 +19,22 @@ namespace Shinx
         public static string Mode { get; private set; } = "none";
         public static string DNSServer { get; private set; } = "8.8.8.8";
 
-        private static readonly string configFile = @"0:\sys\network.txt";
+        private static readonly string configFile = "/sys/network.txt";
 
         public static void Init()
         {
-            if (NetworkDevice.Devices.Count == 0)
+            var device = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
+
+            if (device == null)
             {
                 Console.WriteLine("[net] No network devices found.");
                 return;
             }
 
             LoadConfig();
+
+            // Initialize the network stack before using DHCP/DNS
+            Cosmos.Kernel.System.Network.NetworkStack.Initialize();
 
             if (Mode == "static")
             {
@@ -57,13 +62,14 @@ namespace Shinx
                 }
 
                 int maxAttempts = 20;
-                while (NetworkConfiguration.CurrentAddress == null && maxAttempts > 0)
+                var netDevice = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
+                while (Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(netDevice) == null && maxAttempts > 0)
                 {
-                    Cosmos.HAL.Global.PIT.Wait(500); 
+                    TimerManager.Wait(500);
                     maxAttempts--;
                 }
 
-                if (NetworkConfiguration.CurrentAddress != null)
+                if (Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(netDevice) != null)
                 {
                     UpdateStatus();
                     IsConnected = true;
@@ -88,7 +94,7 @@ namespace Shinx
         {
             try
             {
-                var nic = NetworkDevice.Devices[0];
+                var nic = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
 
                 IPConfig.Enable(nic, Address.Parse(ip), Address.Parse(mask), Address.Parse(gateway));
 
@@ -161,15 +167,17 @@ namespace Shinx
 
         private static void UpdateStatus()
         {
-            if (NetworkConfiguration.CurrentAddress != null)
-                CurrentIP = NetworkConfiguration.CurrentAddress.ToString();
+            var device = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
+            var config = Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(device);
+            if (config != null)
+                CurrentIP = config.IPAddress.ToString();
         }
 
         private static void SaveConfig()
         {
             try
             {
-                if (!Directory.Exists(@"0:\sys")) Directory.CreateDirectory(@"0:\sys");
+                if (!Directory.Exists("/sys")) Directory.CreateDirectory("/sys");
                 File.WriteAllLines(configFile, new[]
                 {
                     $"mode={Mode}",

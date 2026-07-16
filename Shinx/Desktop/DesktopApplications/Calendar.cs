@@ -1,5 +1,6 @@
-﻿using Cosmos.System;
-using Cosmos.System.Graphics;
+﻿using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
+using Cosmos.Kernel.System.Mouse;
 using System;
 using System.Drawing;
 

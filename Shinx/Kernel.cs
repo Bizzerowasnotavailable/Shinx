@@ -1,15 +1,17 @@
 ﻿// I FUCKING FIGURED OUT HOW TO RUN THIS SHI WITHOUT VMWARE YIPEEE
 // SHOUTOUT TO HIRPUS LAB
 
-using Cosmos.System.FileSystem;
-using Cosmos.System.FileSystem.VFS;
-using IL2CPU.API.Attribs;
 using Shinx.Commands;
 using System;
 using System.IO;
+using System.Reflection;
+using System.IO;
+using Cosmos.Kernel.System.Storage;
+using Cosmos.Kernel.System.Vfs;
+using Cosmos.Kernel.System.Filesystems.Fat;
 using UniLua;
-using Sys = Cosmos.System;
-
+using Sys = Cosmos.Kernel.System;
+using Cosmos.Kernel.HAL.Vfs;
 
 
 namespace Shinx
@@ -17,12 +19,17 @@ namespace Shinx
     public class Kernel : Sys.Kernel
     {
         public static peppe commandHandler;
-        private CosmosVFS vfs;
 
         protected override void BeforeRun()
         {
-            vfs = new CosmosVFS();
-            VFSManager.RegisterVFS(vfs);
+            FatFilesystemType fat = new();
+
+            VfsManager.RegisterFilesystem("fat", fat);
+
+            if (VfsManager.TryMount("fat", "0", MountFlags.None, "/", out VfsManager.VfsMount? mount))
+            {
+                Console.WriteLine("Mounted " + mount.Name + " partition " + mount.Source + " at " + mount.MountPoint);
+            }
 
             FSManager.Init();
             FSManager.DeployLuaFiles();
@@ -59,9 +66,10 @@ namespace Shinx
                 LuaBridge.Init();
                 LuaBridge.ScanBin();
 
-                if (File.Exists(@"0:\etc\init.lua"))
+                string initPath = "/etc/init.lua";
+                if (File.Exists(initPath))
                 {
-                    var status = LuaBridge.State.L_DoString(File.ReadAllText(@"0:\etc\init.lua"));
+                    var status = LuaBridge.State.L_DoString(File.ReadAllText(initPath));
                     if (status != ThreadStatus.LUA_OK)
                     {
                         Console.WriteLine("init.lua error: " + LuaBridge.State.L_ToString(-1));

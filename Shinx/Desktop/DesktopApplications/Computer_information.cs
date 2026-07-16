@@ -1,5 +1,5 @@
-﻿using Cosmos.System;
-using Cosmos.System.Graphics;
+﻿using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
 using System;
 using System.Drawing;
 
@@ -30,10 +30,10 @@ namespace Shinx.GUI
         {
             try
             {
-                CachedCPU = Cosmos.Core.CPU.GetCPUBrandString().Trim();
+                CachedCPU = Cosmos.Kernel.Core.CPU.CpuId.GetBrandString().Trim();
                 _cpuLabel = "CPU: " + CachedCPU;
 
-                uint ramTotal = Cosmos.Core.CPU.GetAmountOfRAM();
+                uint ramTotal = (uint)Shinx.LimineMemory.GetTotalPhysicalRamMB();
                 CachedRAM = ramTotal + " MB Total";
                 _ramLabel = "RAM: " + CachedRAM;
 

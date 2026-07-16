@@ -35,7 +35,7 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+            string path = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
 
             try
             {
@@ -61,13 +61,11 @@ namespace Shinx.Commands
             PermissionManager.SetDefault(path, owner);
             foreach (var file in Directory.GetFiles(path))
             {
-                string fullPath = path.TrimEnd('\\') + '\\' + file;
-                PermissionManager.SetDefault(fullPath, owner);
+                PermissionManager.SetDefault(file, owner);
             }
             foreach (var dir in Directory.GetDirectories(path))
             {
-                string fullPath = path.TrimEnd('\\') + '\\' + dir;
-                ApplyOwnerRecursive(fullPath, owner);
+                ApplyOwnerRecursive(dir, owner);
             }
         }
     }

@@ -8,17 +8,17 @@ namespace Shinx
     {
         private static Dictionary<string, HashSet<string>> permissions = new Dictionary<string, HashSet<string>>();
         private static Dictionary<string, string> ownerMap = new Dictionary<string, string>();
-        private static string permFile = @"0:\sys\permissions.txt";
-        private static string ownersFile = @"0:\sys\owners.txt";
+        private static string permFile = "/sys/permissions.txt";
+        private static string ownersFile = "/sys/owners.txt";
 
         public static void Init()
         {
 
             if (!File.Exists(permFile))
             {
-                SetPermission(@"0:\sys", new HashSet<string> { "root" });
-                SetPermission(@"0:\home", new HashSet<string> { "root", "user" });
-                SetPermission(@"0:\", new HashSet<string> { "root" });
+                SetPermission("/sys", new HashSet<string> { "root" });
+                SetPermission("/home", new HashSet<string> { "root", "user" });
+                SetPermission("/", new HashSet<string> { "root" });
                 Save();
             }
             else
@@ -32,7 +32,7 @@ namespace Shinx
             if (UserManager.IsRoot(username))
                 return true;
 
-            string current = path.TrimEnd('\\');
+            string current = path.TrimEnd('\\').TrimEnd('/');
             while (!string.IsNullOrEmpty(current))
             {
                 if (ownerMap.ContainsKey(current) && ownerMap[current] == username)
@@ -59,20 +59,21 @@ namespace Shinx
 
         public static void SetDefault(string path, string username)
         {
-            path = path.TrimEnd('\\');
+            path = path.TrimEnd('\\').TrimEnd('/');
             ownerMap[path] = username;
             SaveOwners();
         }
 
         public static void SetPermission(string path, HashSet<string> allowedGroups)
         {
+            path = path.TrimEnd('\\').TrimEnd('/');
             permissions[path] = allowedGroups;
             Save();
         }
 
         private static string FindBestMatch(string path)
         {
-            string current = path;
+            string current = path.TrimEnd('\\').TrimEnd('/');
             while (!string.IsNullOrEmpty(current))
             {
                 if (permissions.ContainsKey(current))
@@ -139,14 +140,14 @@ namespace Shinx
         }
         public static string GetOwner(string path)
         {
-            path = path.TrimEnd('\\');
+            path = path.TrimEnd('\\').TrimEnd('/');
             if (ownerMap.ContainsKey(path))
                 return ownerMap[path];
             return "root";
         }
         public static string GetPermissionGroups(string path)
         {
-            path = path.TrimEnd('\\');
+            path = path.TrimEnd('\\').TrimEnd('/');
             if (permissions.ContainsKey(path))
                 return string.Join(",", permissions[path]);
 

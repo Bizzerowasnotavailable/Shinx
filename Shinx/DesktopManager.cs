@@ -1,6 +1,8 @@
 using System;
-using Cosmos.System;
-using Cosmos.System.Graphics;
+using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
+using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Timer;
 using System.Drawing;
 
 namespace Shinx
@@ -22,14 +24,15 @@ namespace Shinx
 
             try
             {
+                ScreenManager.Refresh();
+
                 if (vbe == null)
                 {
-                    vbe = (Canvas)FullScreenCanvas.GetFullScreenCanvas(new Mode(800, 600, ColorDepth.ColorDepth32));
-                    Cosmos.HAL.Global.PIT.Wait(50);
+                    vbe = Canvas.GetFullScreen();
+                    TimerManager.Wait(50);
                 }
 
-                MouseManager.ScreenWidth = 800;
-                MouseManager.ScreenHeight = 600;
+                MouseManager.SetScreenSize(ScreenManager.Width, ScreenManager.Height);
 
                 while (Running)
                 {
@@ -53,19 +56,21 @@ namespace Shinx
                         }
                     }
 
-                    vbe.DrawFilledRectangle(taskbarPen, 0, 570, 800, 30);
-                    vbe.DrawFilledRectangle(startBtnPen, 0, 570, 60, 30);
-                    Shinx.GUI.ASC16.DrawACSIIString(vbe, "Start", Color.Black, 10, 578);
+                    int taskbarY = ScreenManager.TaskbarY;
+                    vbe.DrawFilledRectangle(taskbarPen, 0, ScreenManager.TaskbarY, ScreenManager.Width, ScreenManager.TaskbarHeight);
+                    vbe.DrawFilledRectangle(Color.LightGray, 0, ScreenManager.TaskbarY, ScreenManager.StartButtonWidth, ScreenManager.StartButtonHeight);
+                    Shinx.GUI.ASC16.DrawACSIIString(vbe, "Start", Color.Black, 10, (uint)ScreenManager.StartButtonY + 8);
 
-                    int mx = (int)MouseManager.X;
-                    int my = (int)MouseManager.Y;
+                    int mx = MouseManager.X;
+                    int my = MouseManager.Y;
 
-                    if (mx > 792) { MouseManager.X = 792; mx = 792; }
-                    if (my > 592) { MouseManager.Y = 592; my = 592; }
+                    if (mx > ScreenManager.MaxMouseX) { MouseManager.SetPosition(ScreenManager.MaxMouseX, my); mx = ScreenManager.MaxMouseX; }
+                    if (my > ScreenManager.MaxMouseY) { MouseManager.SetPosition(mx, ScreenManager.MaxMouseY); my = ScreenManager.MaxMouseY; }
 
                     if (Shinx.GUI.Mouse.Click())
                     {
-                        if (mx >= 0 && mx <= 60 && my >= 570 && my <= 600)
+                        if (mx >= ScreenManager.StartButtonX && mx <= ScreenManager.StartButtonWidth &&
+                            my >= ScreenManager.StartButtonY && my <= ScreenManager.MaxMouseY)
                         {
                             Shinx.GUI.DrawMenu.menu = !Shinx.GUI.DrawMenu.menu;
                         }
@@ -77,7 +82,7 @@ namespace Shinx
                     vbe.Display();
 
                     frameCount++;
-                    if (frameCount > 1000) { Cosmos.Core.Memory.Heap.Collect(); frameCount = 0; }
+                    if (frameCount > 1000) { GC.Collect(); frameCount = 0; }
                 }
 
                 vbe.Disable();

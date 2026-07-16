@@ -1,4 +1,4 @@
-﻿using Shinx.GUI;
+using Shinx.GUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,11 +10,10 @@ namespace Shinx.Commands
 {
     internal class core_pkg : ICommand
     {
-        private const string RepoHost = "185.199.108.153";
         private const string RepoName = "repo.izzoserver.top";
         private const int RepoPort = 80;
-        private const string BinDir = @"0:\bin\";
-        private const string ManifestPath = @"0:\bin\lpkg.txt";
+        private const string BinDir = "/bin/";
+        private const string ManifestPath = "/bin/lpkg.txt";
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
@@ -151,7 +150,7 @@ namespace Shinx.Commands
                     return;
                 }
             }
-            catch (Exception e)
+catch (Exception e)
             {
                 Console.WriteLine("lpkg: register error: " + e.Message);
                 return;
@@ -254,7 +253,13 @@ namespace Shinx.Commands
             {
                 using (var client = new TcpClient())
                 {
-                    client.Connect(RepoHost, RepoPort);
+                    string ip = NetworkManager.Resolve(RepoName);
+                    if (ip == null)
+                    {
+                        Console.WriteLine("lpkg: failed to resolve " + RepoName);
+                        return null;
+                    }
+                    client.Connect(ip, RepoPort);
                     NetworkStream stream = client.GetStream();
 
                     string req =

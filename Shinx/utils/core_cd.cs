@@ -1,6 +1,6 @@
-﻿using Cosmos.System.FileSystem.VFS;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Shinx.Commands
 {
@@ -22,9 +22,9 @@ namespace Shinx.Commands
 
             try
             {
-                string fullPath = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
+                string fullPath = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
 
-                if (!VFSManager.DirectoryExists(fullPath))
+                if (!Directory.Exists(fullPath))
                 {
                     Console.WriteLine("cd: " + args[0] + ": no such directory");
                     return;

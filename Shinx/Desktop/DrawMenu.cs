@@ -1,5 +1,6 @@
-﻿using Cosmos.System;
-using Cosmos.System.Graphics;
+﻿using ScreenManager = Shinx.ScreenManager;
+using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Graphics;
 using System.Drawing;
 
 namespace Shinx.GUI
@@ -12,7 +13,6 @@ namespace Shinx.GUI
         private const int MaxVisible = 7;
         private const int BtnH = 25;
         private const int BtnGap = 30;
-        private const int TaskbarY = 570;
 
         public static void update(Point CurMouse, Canvas vbe)
         {
@@ -29,7 +29,7 @@ namespace Shinx.GUI
 
             int menuH = 30 + 10 + (hasScroll ? BtnGap : 0) + visibleCount * BtnGap + (hasScroll ? BtnGap : 0) + 10 + BtnH + 5;
 
-            int menuY = TaskbarY - menuH;
+            int menuY = ScreenManager.TaskbarY - menuH;
 
             vbe.DrawFilledRectangle(Color.FromArgb(255, 0, 0, 150), 0, menuY, 150, menuH);
             vbe.DrawRectangle(Color.White, 0, menuY, 150, menuH);
@@ -101,7 +101,7 @@ namespace Shinx.GUI
                 CurMouse.X > 5 && CurMouse.X < 145 &&
                 CurMouse.Y > yOffset && CurMouse.Y < yOffset + BtnH)
             {
-                Cosmos.System.Power.Shutdown();
+                Power.Shutdown();
             }
         }
     }

@@ -1,6 +1,6 @@
-using Cosmos.System.FileSystem.VFS;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Shinx.Commands
 {
@@ -8,7 +8,6 @@ namespace Shinx.Commands
     {
         public void Execute(string[] args, HashSet<char> parameters)
         {            
-            
             foreach (char p in parameters)
             {
                 if (p != 'l')
@@ -18,19 +17,22 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args.Length > 0 ? (args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0]) : Shell.currentDirectory;
+            string path = args.Length > 0 
+    ? (args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0])
+    : Shell.currentDirectory;
 
             try
             {
-                if (!VFSManager.DirectoryExists(path))
+                if (!Directory.Exists(path))
                 {
                     Console.WriteLine("ls: cannot access " + path);
                     return;
                 }
 
-                var entries = VFSManager.GetDirectoryListing(path);
+                var files = Directory.GetFiles(path);
+                var dirs = Directory.GetDirectories(path);
 
-                if (entries == null || entries.Count == 0)
+                if ((files.Length == 0 && dirs.Length == 0))
                 {
                     if (parameters.Contains('l'))
                     {
@@ -41,24 +43,33 @@ namespace Shinx.Commands
                     return;
                 }
 
-                foreach (var entry in entries)
+                foreach (var dir in dirs)
                 {
-                    string fullEntryPath = path.TrimEnd('\\') + '\\' + entry.mName;
+                    string fullEntryPath = dir;
                     if (parameters.Contains('l'))
                     {
                         string owner = PermissionManager.GetOwner(fullEntryPath);
                         string entryGroups = PermissionManager.GetPermissionGroups(fullEntryPath);
-                        if (entry.mEntryType == Cosmos.System.FileSystem.Listing.DirectoryEntryTypeEnum.Directory)
-                            Console.WriteLine(owner + " " + entryGroups + " [DIR] " + entry.mName);
-                        else
-                            Console.WriteLine(owner + " " + entryGroups + "       " + entry.mName);
+                        Console.WriteLine(owner + " " + entryGroups + " [DIR] " + Path.GetFileName(dir));
                     }
                     else
                     {
-                        if (entry.mEntryType == Cosmos.System.FileSystem.Listing.DirectoryEntryTypeEnum.Directory)
-                            Console.WriteLine("[DIR] " + entry.mName);
-                        else
-                            Console.WriteLine("      " + entry.mName);
+                        Console.WriteLine("[DIR] " + Path.GetFileName(dir));
+                    }
+                }
+
+                foreach (var file in files)
+                {
+                    string fullEntryPath = file;
+                    if (parameters.Contains('l'))
+                    {
+                        string owner = PermissionManager.GetOwner(fullEntryPath);
+                        string entryGroups = PermissionManager.GetPermissionGroups(fullEntryPath);
+                        Console.WriteLine(owner + " " + entryGroups + "       " + Path.GetFileName(file));
+                    }
+                    else
+                    {
+                        Console.WriteLine("      " + Path.GetFileName(file));
                     }
                 }
             }

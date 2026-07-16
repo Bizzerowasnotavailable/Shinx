@@ -1,4 +1,4 @@
-﻿using Cosmos.System.Graphics;
+﻿using Cosmos.Kernel.System.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -35,7 +35,7 @@ namespace Shinx.GUI
 
         public static void Open(string path)
         {
-            string fullPath = path.Contains(@":\") ? path : Shell.currentDirectory + path;
+            string fullPath = path.StartsWith("/") ? path : Shell.currentDirectory.TrimEnd('/') + "/" + path;
 
             if (File.Exists(fullPath))
             {

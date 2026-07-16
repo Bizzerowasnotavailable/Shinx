@@ -9,33 +9,39 @@ namespace Shinx.Commands
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("usage: cp [OPTIONS] <source> <destination>\nOPTIONS: -r: copy directories recursively");
+                Console.WriteLine("usage: cp [OPTIONS] <source> <destination>\nOPTIONS: -r: copy directories recursively\n-f: force overwrite if destination exists");
                 return;
             }
 
-            foreach (char p in parameters)
+            bool force = parameters.Contains('f');
+            bool recursive = parameters.Contains('r');
+
+            if (parameters.Count > (force ? 1 : 0) + (recursive ? 1 : 0))
             {
-                if (p != 'r')
+                foreach (char p in parameters)
                 {
-                    Console.WriteLine($"cp: unknown option: -{p}");
-                    return;
+                    if (p != 'r' && p != 'f')
+                    {
+                        Console.WriteLine($"cp: unknown option: -{p}");
+                        return;
+                    }
                 }
             }
 
             try
             {
-                if (parameters.Contains('r'))
+                if (recursive)
                 {
-                    string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
-                    string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+                    string src = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
+                    string dst = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
                     if (!PermissionManager.CanAccess(src, UserManager.currentUser))
                     {
-                        Console.WriteLine("mv: permission denied: " + args[0]);
+                        Console.WriteLine("cp: permission denied: " + args[0]);
                         return;
                     }
                     if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
                     {
-                        Console.WriteLine("mv: permission denied: " + args[1]);
+                        Console.WriteLine("cp: permission denied: " + args[1]);
                         return;
                     }
                     if (!Directory.Exists(src))
@@ -43,21 +49,33 @@ namespace Shinx.Commands
                         Console.WriteLine("cp: " + args[0] + ": no such directory");
                         return;
                     }
+
+                    if (Directory.Exists(dst))
+                    {
+                        if (!force)
+                        {
+                            Console.WriteLine("cp: cannot copy '" + args[0] + "' to '" + args[1] + "': Destination exists (use -f to force)");
+                            return;
+                        }
+                        Directory.Delete(dst, true);
+                    }
+
                     CopyDirectory(src, dst);
                     Console.WriteLine("copied " + args[0] + " to " + args[1]);
                 }
                 else
                 {
-                    string src = args[0].StartsWith(@"0:\") ? args[0] : Shell.currentDirectory + args[0];
-                    string dst = args[1].StartsWith(@"0:\") ? args[1] : Shell.currentDirectory + args[1];
+                    string src = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
+                    string dst = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
+
                     if (!PermissionManager.CanAccess(src, UserManager.currentUser))
                     {
-                        Console.WriteLine("mv: permission denied: " + args[0]);
+                        Console.WriteLine("cp: permission denied: " + args[0]);
                         return;
                     }
                     if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
                     {
-                        Console.WriteLine("mv: permission denied: " + args[1]);
+                        Console.WriteLine("cp: permission denied: " + args[1]);
                         return;
                     }
                     if (!File.Exists(src))
@@ -65,8 +83,18 @@ namespace Shinx.Commands
                         Console.WriteLine("cp: " + args[0] + ": no such file");
                         return;
                     }
-                    byte[] data = File.ReadAllBytes(src);
-                    File.WriteAllBytes(dst, data);
+
+                    if (File.Exists(dst))
+                    {
+                        if (!force)
+                        {
+                            Console.WriteLine("cp: cannot copy '" + args[0] + "' to '" + args[1] + "': Destination exists (use -f to force)");
+                            return;
+                        }
+                        File.Delete(dst);
+                    }
+
+                    File.Copy(src, dst, true);
                     Console.WriteLine("copied " + args[0] + " to " + args[1]);
                 }
             }
@@ -81,17 +109,17 @@ namespace Shinx.Commands
             Directory.CreateDirectory(dst);
             foreach (var file in Directory.GetFiles(src))
             {
-                string fullFilePath = src.TrimEnd('\\') + '\\' + file;
-                string destFile = dst.TrimEnd('\\') + '\\' + file;
-                File.WriteAllBytes(destFile, File.ReadAllBytes(fullFilePath));
+                string fileName = Path.GetFileName(file);
+                string destFile = Path.Combine(dst, fileName);
+                File.Copy(file, destFile, true);
                 PermissionManager.SetDefault(destFile, UserManager.currentUser);
-                Console.WriteLine("copied " + fullFilePath + " to " + destFile);
+                Console.WriteLine("copied " + file + " to " + destFile);
             }
             foreach (var dir in Directory.GetDirectories(src))
             {
-                string fullDirPath = src.TrimEnd('\\') + '\\' + dir;
-                string destDir = dst.TrimEnd('\\') + '\\' + dir;
-                CopyDirectory(fullDirPath, destDir);
+                string dirName = Path.GetFileName(dir);
+                string destDir = Path.Combine(dst, dirName);
+                CopyDirectory(dir, destDir);
             }
         }
     }

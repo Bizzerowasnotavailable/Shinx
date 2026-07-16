@@ -24,7 +24,7 @@ namespace Shinx.Commands
             {
                 if (input.EndsWith(".lua"))
                 {
-                    string path = input.StartsWith(@"0:\")
+                    string path = input.StartsWith("/")
                         ? input
                         : Shell.currentDirectory + input;
 
