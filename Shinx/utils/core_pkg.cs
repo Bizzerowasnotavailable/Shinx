@@ -1,4 +1,4 @@
-﻿using Shinx.GUI;
+using Shinx.GUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,6 @@ namespace Shinx.Commands
 {
     internal class core_pkg : ICommand
     {
-        private const string RepoHost = "185.199.108.153";
         private const string RepoName = "repo.izzoserver.top";
         private const int RepoPort = 80;
         private const string BinDir = "/bin/";
@@ -254,7 +253,13 @@ catch (Exception e)
             {
                 using (var client = new TcpClient())
                 {
-                    client.Connect(RepoHost, RepoPort);
+                    string ip = NetworkManager.Resolve(RepoName);
+                    if (ip == null)
+                    {
+                        Console.WriteLine("lpkg: failed to resolve " + RepoName);
+                        return null;
+                    }
+                    client.Connect(ip, RepoPort);
                     NetworkStream stream = client.GetStream();
 
                     string req =
