@@ -36,6 +36,8 @@ namespace Shinx.Commands
             Console.WriteLine("desktop: launch graphical environment");
             Console.WriteLine("net: manage network config");
             Console.WriteLine("lpkg: package manager");
+            Console.WriteLine("ps: list background processes");
+            Console.WriteLine("kill: stop a background process");
             foreach (var d in peppe.descriptions)
                 Console.WriteLine(d.Key + ": " + d.Value);
         }

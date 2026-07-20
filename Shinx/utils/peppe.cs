@@ -42,7 +42,9 @@ namespace Shinx.Commands
                 { "net", new core_network() },
                 
                 { "http", new core_http() },
-                { "lpkg", new core_pkg() }
+                { "lpkg", new core_pkg() },
+                { "ps", new core_ps() },
+                { "kill", new core_kill() }
             };
         }
 

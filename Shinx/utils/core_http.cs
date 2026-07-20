@@ -13,6 +13,7 @@ namespace Shinx.Commands
         private volatile bool _running;
         private TcpListener _listener;
         private Thread _serverThread;
+        private int _pid;
 
         private static readonly Dictionary<string, string> MimeTypes = new Dictionary<string, string>
         {
@@ -52,27 +53,27 @@ namespace Shinx.Commands
             string myIp = NetworkManager.CurrentIP;
             Console.WriteLine("http: http://" + myIp + ":" + port);
             Console.WriteLine("http: serving " + rootFolder);
-            Console.WriteLine("http: /stop to quit");
 
             _running = true;
             _listener = new TcpListener(IPAddress.Any, port);
 
             _serverThread = new Thread(() => ServerLoop(rootFolder, port));
             _serverThread.Start();
+            _pid = ProcessManager.Register("http", _serverThread, this);
+            Console.WriteLine("http: pid " + _pid + " (kill to stop)");
 
-            if (DesktopManager.Running)
-                return;
-
-            try
+            if (!DesktopManager.Running)
             {
-                while (_running)
-                    Thread.Sleep(100);
-            }
-            finally
-            {
-                _running = false;
-                try { _listener?.Stop(); } catch { }
-                Console.WriteLine("http: stopped");
+                try
+                {
+                    while (_running)
+                        Thread.Sleep(100);
+                }
+                finally
+                {
+                    _running = false;
+                    try { _listener?.Stop(); } catch { }
+                }
             }
         }
 
@@ -115,6 +116,7 @@ namespace Shinx.Commands
             finally
             {
                 _running = false;
+                ProcessManager.Unregister(_pid);
                 Console.WriteLine("http: stopped");
             }
         }

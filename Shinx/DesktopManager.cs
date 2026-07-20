@@ -83,6 +83,7 @@ namespace Shinx
 
                 vbe.Disable();
                 vbe = null;
+                ProcessManager.StopAll();
                 if (vc != null) vc.Clear();
                 else System.Console.Clear();
             }
