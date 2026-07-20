@@ -12,6 +12,7 @@ namespace Shinx.Commands
     {
         private volatile bool _running;
         private TcpListener _listener;
+        private Thread _serverThread;
 
         private static readonly Dictionary<string, string> MimeTypes = new Dictionary<string, string>
         {
@@ -30,16 +31,12 @@ namespace Shinx.Commands
         {
             _running = false;
             try { _listener?.Stop(); } catch { }
+            try { _serverThread?.Join(2000); } catch { }
+            _serverThread = null;
         }
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
-            if (DesktopManager.Running)
-            {
-                Console.WriteLine("http: cannot run while desktop is active");
-                return;
-            }
-
             if (!NetworkManager.IsConnected)
             {
                 Console.WriteLine("http: no network connection");
@@ -57,10 +54,32 @@ namespace Shinx.Commands
             Console.WriteLine("http: serving " + rootFolder);
             Console.WriteLine("http: /stop to quit");
 
+            _running = true;
+            _listener = new TcpListener(IPAddress.Any, port);
+
+            _serverThread = new Thread(() => ServerLoop(rootFolder, port));
+            _serverThread.Start();
+
+            if (DesktopManager.Running)
+                return;
+
             try
             {
-                _running = true;
-                _listener = new TcpListener(IPAddress.Any, port);
+                while (_running)
+                    Thread.Sleep(100);
+            }
+            finally
+            {
+                _running = false;
+                try { _listener?.Stop(); } catch { }
+                Console.WriteLine("http: stopped");
+            }
+        }
+
+        private void ServerLoop(string rootFolder, int port)
+        {
+            try
+            {
                 _listener.Start();
 
                 while (_running)
@@ -83,7 +102,7 @@ namespace Shinx.Commands
                         if (!_running) break;
                         try { _listener.Stop(); } catch { }
                         _listener = new TcpListener(IPAddress.Any, port);
-                        _listener.Start();
+                        try { _listener.Start(); } catch { }
                         continue;
                     }
                     if (client != null) HandleClient(client, rootFolder);

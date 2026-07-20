@@ -41,7 +41,7 @@ namespace Shinx
 
                     Shinx.GUI.WindowManager.DrawWindows(vbe);
 
-                    if (vc != null && vc.KeyAvailable)
+                    while (vc != null && vc.KeyAvailable)
                     {
                         var key = vc.ReadKey(true);
                         if (Shinx.GUI.WindowManager.drawOrder.Count > 0)

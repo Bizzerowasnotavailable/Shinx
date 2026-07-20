@@ -1,8 +1,9 @@
-﻿using Cosmos.Kernel.System;
+﻿using Shinx.Commands;
+using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 
 namespace Shinx.GUI
 {
@@ -12,12 +13,6 @@ namespace Shinx.GUI
         public string DisplayName => "Terminal";
         public bool IsVisible { get => Booleans.terminal_opened; set => Booleans.terminal_opened = value; }
 
-        private static List<string> _lines = new List<string>();
-        private static string _input = "";
-        private static int _cursorPos = 0;
-        private static int _historyIndex = -1;
-        private static List<string> _history = new List<string>();
-
         private const int CharW = 8;
         private const int CharH = 16;
         private const int Padding = 4;
@@ -25,208 +20,249 @@ namespace Shinx.GUI
         private const int Width = 500;
         private const int Height = 300;
 
-        private static Color BgColor = Color.Black;
-        private static Color TextColor = Color.LightGreen;
-        private static Color InputColor = Color.White;
-        private static Color CursorColor = Color.White;
+        private int _gridCols;
+        private int _gridRows;
 
-        private static int MaxLines => (Height - TitleBarH - Padding * 2) / CharH - 1;
-        private static int MaxCols => (Width - Padding * 2) / CharW;
+        private Thread _commandThread;
+        private VirtualConsole _vc;
+        private VirtualConsole _cmdVc;
+        private ICancellable _cancellable;
+        private bool _commandRunning;
 
-        static Terminal()
+        private bool _needsWelcome = true;
+        private Canvas _termCanvas;
+
+        private static readonly Color[] CcColors = {
+            Color.Black, Color.DarkBlue, Color.DarkGreen, Color.DarkCyan,
+            Color.DarkRed, Color.DarkMagenta, Color.FromArgb(128, 128, 0), Color.Gray,
+            Color.DarkGray, Color.Blue, Color.Green, Color.Cyan,
+            Color.Red, Color.Magenta, Color.Yellow, Color.White
+        };
+
+        private void EnsureScreen()
         {
-            PrintLine("SHINX Terminal");
-            PrintLine("type 'exit' to close");
-            PrintLine("");
+            int contentW = Width - Padding * 2;
+            int contentH = Height - TitleBarH - Padding * 2;
+            int cols = contentW / CharW;
+            int rows = contentH / CharH;
+
+            if (_vc != null && _vc.HasScreen && _gridCols == cols && _gridRows == rows)
+                return;
+
+            _gridCols = cols;
+            _gridRows = rows;
+            _termCanvas = new Canvas(contentW, contentH);
+
+            _vc = new VirtualConsole();
+            _vc.InitScreen(cols, rows);
+            _needsWelcome = true;
         }
 
-        public static void PrintLine(string line)
+        private void PrintLine(string line)
         {
-            while (line.Length > MaxCols)
+            _vc.ScreenWrite(line);
+            _vc.ScreenWriteChar('\n');
+        }
+
+        private void WritePrompt()
+        {
+            if (_vc.ScrCX != 0)
+                _vc.ScreenWriteChar('\n');
+
+            string user = string.IsNullOrEmpty(UserManager.currentUser) ? "guest" : UserManager.currentUser;
+            string prompt = user + "@" + Shell.currentDirectory + "> ";
+
+            _vc.ScreenWrite(prompt);
+
+            _vc.StartInput();
+        }
+
+        public Terminal()
+        {
+            EnsureScreen();
+        }
+
+        private void ProcessCmdOps()
+        {
+            if (_cmdVc == null) return;
+            var ops = _cmdVc.DrainOps();
+            foreach (var op in ops)
             {
-                _lines.Add(line.Substring(0, MaxCols));
-                line = line.Substring(MaxCols);
+                switch (op.Type)
+                {
+                    case VirtualConsole.OpType.Write:
+                        if (op.Text != null) _vc.ScreenWrite(op.Text);
+                        break;
+                    case VirtualConsole.OpType.Clear:
+                        _vc.ScreenClear();
+                        break;
+                    case VirtualConsole.OpType.SetCursor:
+                        _vc.ScreenSetCursor(op.X, op.Y);
+                        break;
+                    case VirtualConsole.OpType.SetFg:
+                        if ((int)op.Color < CcColors.Length)
+                            _vc.ScreenSetFg(CcColors[(int)op.Color]);
+                        break;
+                    case VirtualConsole.OpType.SetBg:
+                        if ((int)op.Color < CcColors.Length)
+                            _vc.ScreenSetBg(CcColors[(int)op.Color]);
+                        break;
+                    case VirtualConsole.OpType.ResetColor:
+                        _vc.ScreenSetFg(Color.White);
+                        _vc.ScreenSetBg(Color.Black);
+                        break;
+                }
             }
-            _lines.Add(line);
         }
+
         public void Draw(Canvas canvas)
         {
             if (!Booleans.terminal_opened) return;
 
-            Window.Draw(canvas, ref Int_Manager.terminal_x, ref Int_Manager.terminal_y, Width, Height, DisplayName, ref Booleans.terminal_opened, AppID);
+            EnsureScreen();
 
+            if (_needsWelcome && !_commandRunning)
+            {
+                _needsWelcome = false;
+                PrintLine("SHINX Terminal");
+                PrintLine("type 'exit' to close");
+                WritePrompt();
+            }
+
+            if (_commandRunning)
+            {
+                ProcessCmdOps();
+                if (_commandThread != null && !_commandThread.IsAlive)
+                    FinishCommand();
+            }
+
+            string title = _commandRunning ? "Terminal (running)" : DisplayName;
+            Window.Draw(canvas, ref Int_Manager.terminal_x, ref Int_Manager.terminal_y, Width, Height, title, ref Booleans.terminal_opened, AppID);
             if (!Booleans.terminal_opened) return;
 
             int x = Int_Manager.terminal_x;
             int y = Int_Manager.terminal_y;
-
-            canvas.DrawFilledRectangle(BgColor, x + 1, y + TitleBarH, Width - 2, Height - TitleBarH - 1);
-
+            int contentX = x + Padding;
             int contentY = y + TitleBarH + Padding;
-            int startLine = Math.Max(0, _lines.Count - MaxLines);
 
-            for (int i = startLine; i < _lines.Count; i++)
+            _termCanvas.Clear(Color.Black);
+
+            char[,] chars = _vc.ScrChars;
+            Color[,] fg = _vc.ScrFgBuf;
+            Color[,] bg = _vc.ScrBgBuf;
+
+            if (chars == null) return;
+
+            for (int r = 0; r < _gridRows; r++)
             {
-                string line = _lines[i];
-                if (line.Length > MaxCols)
-                    line = line.Substring(0, MaxCols);
-                ASC16.DrawACSIIString(canvas, line, TextColor,
-                    (uint)(x + Padding),
-                    (uint)(contentY + (i - startLine) * CharH));
+                for (int c = 0; c < _gridCols; c++)
+                {
+                    char ch = chars[r, c];
+                    if (ch == ' ') continue;
+
+                    Color fgC = fg[r, c];
+                    Color bgC = bg[r, c];
+
+                    if (bgC != Color.Black)
+                        _termCanvas.DrawFilledRectangle(bgC, c * CharW, r * CharH, CharW, CharH);
+
+                    ASC16.DrawACSIIString(_termCanvas, ch.ToString(), fgC,
+                        (uint)(c * CharW), (uint)(r * CharH));
+                }
             }
 
-            int inputY = y + Height - CharH - Padding;
-            string prompt = UserManager.currentUser + "@" + Shell.currentDirectory + "> ";
-            string inputLine = prompt + _input;
+            int cx = Math.Clamp(_vc.ScrCX, 0, _gridCols - 1);
+            int cy = Math.Clamp(_vc.ScrCY, 0, _gridRows - 1);
+            _termCanvas.DrawFilledRectangle(Color.White,
+                cx * CharW, cy * CharH + CharH - 2, CharW, 2);
 
-            if (inputLine.Length > MaxCols)
-                inputLine = inputLine.Substring(inputLine.Length - MaxCols);
-
-            ASC16.DrawACSIIString(canvas, inputLine, InputColor,
-                (uint)(x + Padding), (uint)inputY);
-
-            int cursorX = x + Padding + (prompt.Length + _cursorPos) * CharW;
-            canvas.DrawFilledRectangle(CursorColor, cursorX, inputY + CharH - 2, CharW, 2);
+            canvas.DrawCanvas(_termCanvas, contentX, contentY);
         }
+
         public void HandleKey(ConsoleKeyInfo key)
         {
             if (!Booleans.terminal_opened) return;
 
-            switch (key.Key)
+            EnsureScreen();
+
+            if (_commandRunning)
             {
-                case ConsoleKey.Enter:
-                    string cmd = _input.Trim();
-                    PrintLine(UserManager.currentUser + "@" + Shell.currentDirectory + "> " + cmd);
-
-                    if (cmd == "exit" || cmd == "quit")
-                    {
-                        Booleans.terminal_opened = false;
-                        _input = "";
-                        _cursorPos = 0;
-                        return;
-                    }
-
-                    if (!string.IsNullOrEmpty(cmd))
-                    {
-                        if (_history.Count == 0 || _history[_history.Count - 1] != cmd)
-                            _history.Add(cmd);
-                        _historyIndex = -1;
-
-                        var oldOut = System.Console.Out;
-                        var writer = new TerminalWriter();
-                        System.Console.SetOut(writer);
-                        try
-                        {
-                            Kernel.commandHandler.Execute(cmd);
-                        }
-                        catch (Exception e)
-                        {
-                            PrintLine("error: " + e.Message);
-                        }
-                        finally
-                        {
-                            System.Console.SetOut(oldOut);
-                        }
-                    }
-
-                    _input = "";
-                    _cursorPos = 0;
-                    break;
-
-                case ConsoleKey.Backspace:
-                    if (_cursorPos > 0)
-                    {
-                        _input = _input.Substring(0, _cursorPos - 1) + _input.Substring(_cursorPos);
-                        _cursorPos--;
-                    }
-                    break;
-
-                case ConsoleKey.Delete:
-                    if (_cursorPos < _input.Length)
-                        _input = _input.Substring(0, _cursorPos) + _input.Substring(_cursorPos + 1);
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    if (_cursorPos > 0) _cursorPos--;
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    if (_cursorPos < _input.Length) _cursorPos++;
-                    break;
-
-                case ConsoleKey.UpArrow:
-                    if (_history.Count == 0) break;
-                    if (_historyIndex == -1) _historyIndex = _history.Count - 1;
-                    else if (_historyIndex > 0) _historyIndex--;
-                    _input = _history[_historyIndex];
-                    _cursorPos = _input.Length;
-                    break;
-
-                case ConsoleKey.DownArrow:
-                    if (_historyIndex == -1) break;
-                    if (_historyIndex < _history.Count - 1)
-                    {
-                        _historyIndex++;
-                        _input = _history[_historyIndex];
-                    }
+                if (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
+                {
+                    if (_cancellable != null)
+                        _cancellable.Cancel();
                     else
-                    {
-                        _historyIndex = -1;
-                        _input = "";
-                    }
-                    _cursorPos = _input.Length;
-                    break;
-
-                case ConsoleKey.Home:
-                    _cursorPos = 0;
-                    break;
-
-                case ConsoleKey.End:
-                    _cursorPos = _input.Length;
-                    break;
-
-                default:
-                    if (key.KeyChar >= 32 && key.KeyChar < 127)
-                    {
-                        _input = _input.Substring(0, _cursorPos) + key.KeyChar + _input.Substring(_cursorPos);
-                        _cursorPos++;
-                    }
-                    break;
+                        Shell.CancelRequested = true;
+                    _vc.ScreenWrite("^C\n");
+                    return;
+                }
+                _cmdVc?.EnqueueKey(key);
+                return;
             }
-        }
-    }
-    public class TerminalWriter : System.IO.TextWriter
-    {
-        private string _buffer = "";
 
-        public override System.Text.Encoding Encoding => System.Text.Encoding.UTF8;
-
-        public override void Write(char value)
-        {
-            if (value == '\n')
+            if (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
             {
-                Terminal.PrintLine(_buffer);
-                _buffer = "";
+                _vc.ScreenWrite("^C\n");
+                WritePrompt();
+                return;
             }
-            else if (value != '\r')
+
+            _vc.HandleKey(key);
+
+            string cmd = _vc.PendingCommand;
+            if (cmd != null)
             {
-                _buffer += value;
+                if (cmd == "exit" || cmd == "quit")
+                {
+                    Booleans.terminal_opened = false;
+                    return;
+                }
+                if (!string.IsNullOrEmpty(cmd))
+                    StartCommand(cmd);
             }
         }
 
-        public override void WriteLine(string value)
+        private void StartCommand(string cmd)
         {
-            Terminal.PrintLine(_buffer + (value ?? ""));
-            _buffer = "";
+            _cmdVc = new VirtualConsole();
+            _cmdVc.SetSize(_gridCols, _gridRows);
+            VirtualConsole.Current = _cmdVc;
+            _cmdVc.RedirectConsole();
+
+            Shell.CancelRequested = false;
+            _cancellable = null;
+            string trimmed = cmd.TrimStart();
+            int spaceIdx = trimmed.IndexOf(' ');
+            string cmdName = spaceIdx > 0 ? trimmed.Substring(0, spaceIdx) : trimmed;
+            if (peppe.commands.ContainsKey(cmdName) && peppe.commands[cmdName] is ICancellable c)
+                _cancellable = c;
+
+            _commandThread = new Thread(() =>
+            {
+                try
+                {
+                    Kernel.commandHandler.Execute(cmd);
+                }
+                catch (Exception e)
+                {
+                    VirtualConsole.Current = _cmdVc;
+                    Console.WriteLine("error: " + e.Message);
+                    VirtualConsole.Current = null;
+                }
+            });
+            _commandRunning = true;
+            _commandThread.Start();
         }
 
-        public override void Flush()
+        private void FinishCommand()
         {
-            if (_buffer.Length > 0)
-            {
-                Terminal.PrintLine(_buffer);
-                _buffer = "";
-            }
+            _commandRunning = false;
+            try { _cmdVc?.RestoreConsole(); } catch { }
+            VirtualConsole.Current = null;
+            _cmdVc = null;
+            _cancellable = null;
+            _commandThread = null;
+            WritePrompt();
         }
     }
 }
