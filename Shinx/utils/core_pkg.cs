@@ -150,7 +150,7 @@ namespace Shinx.Commands
                     return;
                 }
             }
-catch (Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("lpkg: register error: " + e.Message);
                 return;
@@ -253,13 +253,30 @@ catch (Exception e)
             {
                 using (var client = new TcpClient())
                 {
-                    string ip = NetworkManager.Resolve(RepoName);
-                    if (ip == null)
+                    var ips = NetworkManager.ResolveAll(RepoName);
+                    if (ips == null || ips.Count == 0)
                     {
                         Console.WriteLine("lpkg: failed to resolve " + RepoName);
                         return null;
                     }
-                    client.Connect(ip, RepoPort);
+
+                    bool connected = false;
+                    foreach (var ip in ips)
+                    {
+                        try
+                        {
+                            client.Connect(ip, RepoPort);
+                            connected = true;
+                            break;
+                        }
+                        catch { }
+                    }
+
+                    if (!connected)
+                    {
+                        Console.WriteLine("lpkg: failed to connect to " + RepoName);
+                        return null;
+                    }
                     NetworkStream stream = client.GetStream();
 
                     string req =
@@ -273,8 +290,19 @@ catch (Exception e)
                     var resp = new List<byte>();
                     byte[] buf = new byte[1024];
                     int read;
-                    while ((read = stream.Read(buf, 0, buf.Length)) > 0)
-                        for (int i = 0; i < read; i++) resp.Add(buf[i]);
+                    int retries = 20;
+                    while (retries > 0)
+                    {
+                        try
+                        {
+                            while ((read = stream.Read(buf, 0, buf.Length)) > 0)
+                                for (int i = 0; i < read; i++) resp.Add(buf[i]);
+                            if (resp.Count > 0) break;
+                        }
+                        catch { }
+                        Cosmos.Kernel.System.Timer.TimerManager.Wait(500);
+                        retries--;
+                    }
 
                     stream.Close();
 
