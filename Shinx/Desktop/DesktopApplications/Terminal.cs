@@ -31,6 +31,8 @@ namespace Shinx.GUI
 
         private bool _needsWelcome = true;
         private Canvas _termCanvas;
+        private int _lastCursorX = -1;
+        private int _lastCursorY = -1;
 
         private static readonly Color[] CcColors = {
             Color.Black, Color.DarkBlue, Color.DarkGreen, Color.DarkCyan,
@@ -52,6 +54,8 @@ namespace Shinx.GUI
             _gridCols = cols;
             _gridRows = rows;
             _termCanvas = new Canvas(contentW, contentH);
+            _lastCursorX = -1;
+            _lastCursorY = -1;
 
             _vc = new VirtualConsole();
             _vc.InitScreen(cols, rows);
@@ -145,11 +149,10 @@ namespace Shinx.GUI
             int contentX = x + Padding;
             int contentY = y + TitleBarH + Padding;
 
-            _termCanvas.Clear(Color.Black);
-
             char[,] chars = _vc.ScrChars;
             Color[,] fg = _vc.ScrFgBuf;
             Color[,] bg = _vc.ScrBgBuf;
+            bool[,] dirty = _vc.DrainDirty();
 
             if (chars == null) return;
 
@@ -157,24 +160,42 @@ namespace Shinx.GUI
             {
                 for (int c = 0; c < _gridCols; c++)
                 {
-                    char ch = chars[r, c];
-                    if (ch == ' ') continue;
+                    if (!dirty[r, c]) continue;
 
+                    char ch = chars[r, c];
                     Color fgC = fg[r, c];
                     Color bgC = bg[r, c];
 
                     if (bgC != Color.Black)
                         _termCanvas.DrawFilledRectangle(bgC, c * CharW, r * CharH, CharW, CharH);
+                    else
+                        _termCanvas.DrawFilledRectangle(Color.Black, c * CharW, r * CharH, CharW, CharH);
 
-                    ASC16.DrawACSIIString(_termCanvas, ch.ToString(), fgC,
-                        (uint)(c * CharW), (uint)(r * CharH));
+                    if (ch != ' ')
+                        ASC16.DrawACSIIString(_termCanvas, ch.ToString(), fgC,
+                            (uint)(c * CharW), (uint)(r * CharH));
                 }
             }
 
             int cx = Math.Clamp(_vc.ScrCX, 0, _gridCols - 1);
             int cy = Math.Clamp(_vc.ScrCY, 0, _gridRows - 1);
+
+            if (_lastCursorX >= 0 && _lastCursorY >= 0 && (_lastCursorX != cx || _lastCursorY != cy))
+            {
+                char och = chars[_lastCursorY, _lastCursorX];
+                Color ofg = fg[_lastCursorY, _lastCursorX];
+                Color obg = bg[_lastCursorY, _lastCursorX];
+                _termCanvas.DrawFilledRectangle(obg != Color.Black ? obg : Color.Black,
+                    _lastCursorX * CharW, _lastCursorY * CharH, CharW, CharH);
+                if (och != ' ')
+                    ASC16.DrawACSIIString(_termCanvas, och.ToString(), ofg,
+                        (uint)(_lastCursorX * CharW), (uint)(_lastCursorY * CharH));
+            }
+
             _termCanvas.DrawFilledRectangle(Color.White,
                 cx * CharW, cy * CharH + CharH - 2, CharW, 2);
+            _lastCursorX = cx;
+            _lastCursorY = cy;
 
             canvas.DrawCanvas(_termCanvas, contentX, contentY);
         }

@@ -29,6 +29,8 @@ namespace Shinx
         private char[,] _scrChars;
         private Color[,] _scrFg;
         private Color[,] _scrBg;
+        private bool[,] _scrDirty;
+        private bool _allDirty;
         private int _scrW, _scrH;
         private int _scrCX, _scrCY;
         private Color _scrFgCur = Color.White;
@@ -59,8 +61,31 @@ namespace Shinx
         public char[,] ScrChars => _scrChars;
         public Color[,] ScrFgBuf => _scrFg;
         public Color[,] ScrBgBuf => _scrBg;
+        public bool AllDirty => _allDirty;
         public string PendingCommand { get { lock (_lock) { string r = _pendingCommand; _pendingCommand = null; return r; } } }
         public bool InputActive { get { lock (_lock) return _inputMode; } }
+
+        public bool[,] DrainDirty()
+        {
+            lock (_lock)
+            {
+                if (_allDirty)
+                {
+                    _allDirty = false;
+                    bool[,] snapshot = new bool[_scrH, _scrW];
+                    for (int r = 0; r < _scrH; r++)
+                        for (int c = 0; c < _scrW; c++)
+                        {
+                            snapshot[r, c] = true;
+                            _scrDirty[r, c] = false;
+                        }
+                    return snapshot;
+                }
+                bool[,] result = _scrDirty;
+                _scrDirty = new bool[_scrH, _scrW];
+                return result;
+            }
+        }
 
         public void InitScreen(int w, int h)
         {
@@ -71,6 +96,8 @@ namespace Shinx
                 _scrChars = new char[h, w];
                 _scrFg = new Color[h, w];
                 _scrBg = new Color[h, w];
+                _scrDirty = new bool[h, w];
+                _allDirty = true;
                 for (int r = 0; r < h; r++)
                     for (int c = 0; c < w; c++)
                     {
@@ -92,17 +119,20 @@ namespace Shinx
                     _scrChars[r, c] = _scrChars[r + 1, c];
                     _scrFg[r, c] = _scrFg[r + 1, c];
                     _scrBg[r, c] = _scrBg[r + 1, c];
+                    _scrDirty[r, c] = true;
                 }
             for (int c = 0; c < _scrW; c++)
             {
                 _scrChars[_scrH - 1, c] = ' ';
                 _scrFg[_scrH - 1, c] = _scrFgCur;
                 _scrBg[_scrH - 1, c] = _scrBgCur;
+                _scrDirty[_scrH - 1, c] = true;
             }
         }
 
         private void ScrNewline()
         {
+            _scrDirty[_scrCY, _scrCX] = true;
             _scrCX = 0;
             _scrCY++;
             if (_scrCY >= _scrH)
@@ -124,6 +154,7 @@ namespace Shinx
                     _scrChars[_scrCY, _scrCX] = ' ';
                     _scrFg[_scrCY, _scrCX] = _scrFgCur;
                     _scrBg[_scrCY, _scrCX] = _scrBgCur;
+                    _scrDirty[_scrCY, _scrCX] = true;
                     _scrCX++;
                 }
                 if (_scrCX >= _scrW) ScrNewline();
@@ -133,6 +164,7 @@ namespace Shinx
             _scrChars[_scrCY, _scrCX] = ch;
             _scrFg[_scrCY, _scrCX] = _scrFgCur;
             _scrBg[_scrCY, _scrCX] = _scrBgCur;
+            _scrDirty[_scrCY, _scrCX] = true;
             _scrCX++;
         }
 
@@ -150,6 +182,7 @@ namespace Shinx
                     _scrChars[r, c] = ' ';
                     _scrFg[r, c] = _scrFgCur;
                     _scrBg[r, c] = _scrBgCur;
+                    _scrDirty[r, c] = true;
                 }
             _scrCX = 0;
             _scrCY = 0;
@@ -176,8 +209,12 @@ namespace Shinx
             lock (_lock)
             {
                 if (!_hasScreen) return;
+                if (_scrDirty != null && _scrCY >= 0 && _scrCY < _scrH && _scrCX >= 0 && _scrCX < _scrW)
+                    _scrDirty[_scrCY, _scrCX] = true;
                 _scrCX = Math.Max(0, Math.Min(x, _scrW - 1));
                 _scrCY = Math.Max(0, Math.Min(y, _scrH - 1));
+                if (_scrDirty != null)
+                    _scrDirty[_scrCY, _scrCX] = true;
             }
         }
 
