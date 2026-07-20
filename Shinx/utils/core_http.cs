@@ -111,13 +111,16 @@ namespace Shinx.Commands
             }
             catch (Exception e)
             {
-                if (_running) Console.WriteLine("http: " + e.Message);
+                if (_running)
+                {
+                    try { Console.WriteLine("http: " + e.Message); } catch { }
+                }
             }
             finally
             {
                 _running = false;
-                ProcessManager.Unregister(_pid);
-                Console.WriteLine("http: stopped");
+                try { ProcessManager.Unregister(_pid); } catch { }
+                try { Console.WriteLine("http: stopped"); } catch { }
             }
         }
 

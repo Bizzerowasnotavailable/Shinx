@@ -120,7 +120,7 @@ namespace Shinx
                         while (Console.KeyAvailable)
                         {
                             ConsoleKeyInfo key = Console.ReadKey(true);
-                            if (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
+                            if (!DesktopManager.Running && key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
                             {
                                 if (cancellable != null)
                                     cancellable.Cancel();

@@ -3,13 +3,8 @@ using System.Collections.Generic;
 
 namespace Shinx.Commands
 {
-    public class core_desktop : ICommand, ICancellable
+    public class core_desktop : ICommand
     {
-        public void Cancel()
-        {
-            DesktopManager.Running = false;
-        }
-
         public void Execute(string[] args, HashSet<char> parameters)
         {
             if (DesktopManager.Running)
@@ -21,14 +16,17 @@ namespace Shinx.Commands
             try
             {
                 DesktopManager.Start();
-                DesktopManager.Running = false;
-                VirtualConsole.Current?.Clear();
-                Console.WriteLine("Returned to Shinx Console.");
             }
             catch (Exception e)
             {
                 Console.WriteLine($"desktop: {e.Message}");
             }
+            finally
+            {
+                DesktopManager.Running = false;
+            }
+            VirtualConsole.Current?.Clear();
+            Console.WriteLine("Returned to Shinx Console.");
         }
     }
 }

@@ -81,6 +81,7 @@ namespace Shinx
                     vbe.Display();
                 }
 
+                Running = false;
                 vbe.Disable();
                 vbe = null;
                 ProcessManager.StopAll();

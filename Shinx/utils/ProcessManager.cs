@@ -16,29 +16,37 @@ namespace Shinx
         }
 
         private static readonly List<ProcessEntry> _processes = new List<ProcessEntry>();
+        private static readonly object _lock = new object();
         private static int _nextPid = 1;
 
         public static int Register(string name, Thread thread, ICancellable cancellable = null)
         {
-            int pid = _nextPid++;
-            _processes.Add(new ProcessEntry
+            int pid;
+            lock (_lock)
             {
-                Pid = pid,
-                Name = name,
-                Thread = thread,
-                Cancellable = cancellable
-            });
+                pid = _nextPid++;
+                _processes.Add(new ProcessEntry
+                {
+                    Pid = pid,
+                    Name = name,
+                    Thread = thread,
+                    Cancellable = cancellable
+                });
+            }
             return pid;
         }
 
         public static void Unregister(int pid)
         {
-            for (int i = 0; i < _processes.Count; i++)
+            lock (_lock)
             {
-                if (_processes[i].Pid == pid)
+                for (int i = 0; i < _processes.Count; i++)
                 {
-                    _processes.RemoveAt(i);
-                    return;
+                    if (_processes[i].Pid == pid)
+                    {
+                        _processes.RemoveAt(i);
+                        return;
+                    }
                 }
             }
         }
@@ -46,50 +54,76 @@ namespace Shinx
         public static List<ProcessEntry> List()
         {
             var alive = new List<ProcessEntry>();
-            for (int i = _processes.Count - 1; i >= 0; i--)
+            lock (_lock)
             {
-                var e = _processes[i];
-                if (e.Thread != null && e.Thread.IsAlive)
-                    alive.Add(e);
-                else
-                    _processes.RemoveAt(i);
+                for (int i = _processes.Count - 1; i >= 0; i--)
+                {
+                    var e = _processes[i];
+                    if (e.Thread != null && e.Thread.IsAlive)
+                        alive.Add(e);
+                    else
+                        _processes.RemoveAt(i);
+                }
             }
             return alive;
         }
 
         public static bool Stop(int pid)
         {
-            for (int i = 0; i < _processes.Count; i++)
+            ProcessEntry? found = null;
+            lock (_lock)
             {
-                if (_processes[i].Pid == pid)
+                for (int i = 0; i < _processes.Count; i++)
                 {
-                    var e = _processes[i];
-                    try
+                    if (_processes[i].Pid == pid)
                     {
-                        if (e.Cancellable != null)
-                            e.Cancellable.Cancel();
-                        else if (e.Thread != null && e.Thread.IsAlive)
-                            e.Thread.Interrupt();
+                        found = _processes[i];
+                        break;
                     }
-                    catch { }
-                    try
-                    {
-                        if (e.Thread != null && e.Thread.IsAlive)
-                            e.Thread.Join(2000);
-                    }
-                    catch { }
-                    _processes.RemoveAt(i);
-                    return true;
                 }
             }
-            return false;
+
+            if (found == null) return false;
+            var e = found.Value;
+
+            try
+            {
+                if (e.Cancellable != null)
+                    e.Cancellable.Cancel();
+                else if (e.Thread != null && e.Thread.IsAlive)
+                    e.Thread.Interrupt();
+            }
+            catch { }
+            try
+            {
+                if (e.Thread != null && e.Thread.IsAlive)
+                    e.Thread.Join(2000);
+            }
+            catch { }
+
+            lock (_lock)
+            {
+                for (int i = 0; i < _processes.Count; i++)
+                {
+                    if (_processes[i].Pid == pid)
+                    {
+                        _processes.RemoveAt(i);
+                        return true;
+                    }
+                }
+            }
+            return true;
         }
 
         public static void StopAll()
         {
-            for (int i = _processes.Count - 1; i >= 0; i--)
+            ProcessEntry[] snapshot;
+            lock (_lock)
             {
-                var e = _processes[i];
+                snapshot = _processes.ToArray();
+            }
+            foreach (var e in snapshot)
+            {
                 try
                 {
                     if (e.Cancellable != null)
@@ -105,7 +139,10 @@ namespace Shinx
                 }
                 catch { }
             }
-            _processes.Clear();
+            lock (_lock)
+            {
+                _processes.Clear();
+            }
         }
     }
 }
