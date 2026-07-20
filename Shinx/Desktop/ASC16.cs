@@ -17,6 +17,8 @@ namespace Shinx.GUI
 			if (FontData == null)
 				FontData = Convert.FromBase64String(ASC16Base64);
 
+			int screenW = ScreenManager.Width;
+			int screenH = ScreenManager.Height;
 			int curX = (int)x;
 			int curY = (int)y;
 
@@ -31,18 +33,26 @@ namespace Shinx.GUI
 					continue;
 				}
 
-				int offset = (c & 0xFF) * 16;
-
-				for (int i = 0; i < 16; i++)
+				if (curY >= screenH) break;
+				if (curX + 8 > 0 && curX < screenW && curY + 16 > 0)
 				{
-					byte row = FontData[offset + i];
-					if (row == 0) continue;
+					int offset = (c & 0xFF) * 16;
 
-					for (int j = 0; j < 8; j++)
+					for (int i = 0; i < 16; i++)
 					{
-						if ((row & (0x80 >> j)) != 0)
+						int py = curY + i;
+						if (py >= screenH) break;
+						if (py < 0) continue;
+						byte row = FontData[offset + i];
+						if (row == 0) continue;
+
+						for (int j = 0; j < 8; j++)
 						{
-							vbe.DrawPoint(color, curX + j, curY + i);
+							int px = curX + j;
+							if (px >= 0 && px < screenW && (row & (0x80 >> j)) != 0)
+							{
+								vbe.DrawPoint(color, px, py);
+							}
 						}
 					}
 				}

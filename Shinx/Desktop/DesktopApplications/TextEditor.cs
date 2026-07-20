@@ -120,6 +120,12 @@ namespace Shinx.GUI
                     {
                         Open(_inputBuffer);
                     }
+                    else if (_inputPurpose == "SAVEAS")
+                    {
+                        string savePath = _inputBuffer.StartsWith("/") ? _inputBuffer : Shell.currentDirectory.TrimEnd('/') + "/" + _inputBuffer;
+                        CurrentPath = savePath;
+                        Save();
+                    }
 
                     _isInputMode = false;
                     _statusTimer = 100;
@@ -184,6 +190,16 @@ namespace Shinx.GUI
 
         private static void Save()
         {
+            if (string.IsNullOrEmpty(CurrentPath))
+            {
+                _isInputMode = true;
+                _inputPurpose = "SAVEAS";
+                _inputPrompt = "Save As: ";
+                _inputBuffer = Shell.currentDirectory;
+                _status = "Enter path to save";
+                _statusTimer = 150;
+                return;
+            }
             try
             {
                 File.WriteAllLines(CurrentPath, Lines.ToArray());

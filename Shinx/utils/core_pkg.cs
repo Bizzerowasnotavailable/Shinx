@@ -142,11 +142,10 @@ namespace Shinx.Commands
             try
             {
                 string code = Encoding.UTF8.GetString(data);
-                var status = LuaBridge.State.L_DoString(code);
-                if (status != ThreadStatus.LUA_OK)
+                var result = LuaExecutor.DoString(code);
+                if (result.Status != ThreadStatus.LUA_OK)
                 {
-                    Console.WriteLine("lpkg: register error: " + LuaBridge.State.L_ToString(-1));
-                    LuaBridge.State.Pop(1);
+                    Console.WriteLine("lpkg: register error: " + result.Error);
                     return;
                 }
             }

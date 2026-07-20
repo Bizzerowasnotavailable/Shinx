@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.IO;
+using System.Threading;
 using Cosmos.Kernel.System.Storage;
 using Cosmos.Kernel.System.Vfs;
 using Cosmos.Kernel.System.Filesystems.Fat;
@@ -63,18 +64,15 @@ namespace Shinx
                     }
                 }
 
-                LuaBridge.Init();
+                LuaExecutor.Init();
                 LuaBridge.ScanBin();
 
                 string initPath = "/etc/init.lua";
                 if (File.Exists(initPath))
                 {
-                    var status = LuaBridge.State.L_DoString(File.ReadAllText(initPath));
-                    if (status != ThreadStatus.LUA_OK)
-                    {
-                        Console.WriteLine("init.lua error: " + LuaBridge.State.L_ToString(-1));
-                        LuaBridge.State.Pop(1);
-                    }
+                    var result = LuaExecutor.DoString(File.ReadAllText(initPath));
+                    if (result.Status != ThreadStatus.LUA_OK)
+                        Console.WriteLine("init.lua error: " + result.Error);
                 }
 
                 commandHandler.Execute("fetch");
@@ -96,7 +94,60 @@ namespace Shinx
             if (!string.IsNullOrEmpty(input))
             {
                 Shell.history.Add(input);
-                commandHandler.Execute(input);
+                Shell.CancelRequested = false;
+
+                ICancellable cancellable = null;
+                string trimmed = input.TrimStart();
+                int spaceIdx = trimmed.IndexOf(' ');
+                string cmdName = spaceIdx > 0 ? trimmed.Substring(0, spaceIdx) : trimmed;
+                if (peppe.commands.ContainsKey(cmdName) && peppe.commands[cmdName] is ICancellable c)
+                    cancellable = c;
+
+                VirtualConsole vc = new VirtualConsole();
+                VirtualConsole.Current = vc;
+                vc.RedirectConsole();
+
+                try
+                {
+                    Thread cmdThread = new Thread(() => commandHandler.Execute(input));
+                    Shell.CommandThread = cmdThread;
+                    cmdThread.Start();
+
+                    while (cmdThread.IsAlive)
+                    {
+                        LuaExecutor.ProcessPending();
+
+                        while (Console.KeyAvailable)
+                        {
+                            ConsoleKeyInfo key = Console.ReadKey(true);
+                            if (key.Key == ConsoleKey.C && key.Modifiers == ConsoleModifiers.Control)
+                            {
+                                if (cancellable != null)
+                                    cancellable.Cancel();
+                                else
+                                    Shell.CancelRequested = true;
+                                lock (Shell.ConsoleLock)
+                                    Console.WriteLine("^C");
+                                break;
+                            }
+                            vc.EnqueueKey(key);
+                        }
+
+                        if (vc.HasPendingOps)
+                            vc.Flush();
+
+                        Thread.Sleep(50);
+                    }
+
+                    if (vc.HasPendingOps)
+                        vc.Flush();
+                }
+                finally
+                {
+                    vc.RestoreConsole();
+                    VirtualConsole.Current = null;
+                    Shell.CommandThread = null;
+                }
             }
         }
 

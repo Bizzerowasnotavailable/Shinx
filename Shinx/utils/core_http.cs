@@ -4,11 +4,15 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Shinx.Commands
 {
-    internal class core_http : ICommand
+    internal class core_http : ICommand, ICancellable
     {
+        private volatile bool _running;
+        private TcpListener _listener;
+
         private static readonly Dictionary<string, string> MimeTypes = new Dictionary<string, string>
         {
             { ".html", "text/html" },
@@ -21,6 +25,12 @@ namespace Shinx.Commands
             { ".jpg",  "image/jpeg" },
             { ".lua",  "text/plain" },
         };
+
+        public void Cancel()
+        {
+            _running = false;
+            try { _listener?.Stop(); } catch { }
+        }
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
@@ -43,32 +53,50 @@ namespace Shinx.Commands
             int port = args.Length > 1 ? int.Parse(args[1]) : 8080;
 
             string myIp = NetworkManager.CurrentIP;
-            Console.WriteLine("http: serving " + rootFolder);
             Console.WriteLine("http: http://" + myIp + ":" + port);
-            Console.WriteLine("http: navigate to http://" + myIp + ":" + port + "/stop to stop");
+            Console.WriteLine("http: serving " + rootFolder);
+            Console.WriteLine("http: /stop to quit");
 
             try
             {
-                var listener = new TcpListener(IPAddress.Any, port);
-                listener.Start();
+                _running = true;
+                _listener = new TcpListener(IPAddress.Any, port);
+                _listener.Start();
 
-                while (true)
+                while (_running)
                 {
-                    TcpClient client;
-                    try { client = listener.AcceptTcpClient(); }
+                    TcpClient client = null;
+                    try
+                    {
+                        if (_listener.Pending())
+                        {
+                            client = _listener.AcceptTcpClient();
+                        }
+                        else
+                        {
+                            Thread.Sleep(50);
+                            continue;
+                        }
+                    }
                     catch
                     {
-                        try { listener.Stop(); } catch { }
-                        listener = new TcpListener(IPAddress.Any, port);
-                        listener.Start();
+                        if (!_running) break;
+                        try { _listener.Stop(); } catch { }
+                        _listener = new TcpListener(IPAddress.Any, port);
+                        _listener.Start();
                         continue;
                     }
-                    HandleClient(client, rootFolder);
+                    if (client != null) HandleClient(client, rootFolder);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("http: " + e.Message);
+                if (_running) Console.WriteLine("http: " + e.Message);
+            }
+            finally
+            {
+                _running = false;
+                Console.WriteLine("http: stopped");
             }
         }
 
@@ -78,92 +106,39 @@ namespace Shinx.Commands
             {
                 NetworkStream stream = client.GetStream();
 
-                while (true)
+                string request = ReadRequest(stream);
+                if (request == null)
                 {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    try { bytesRead = stream.Read(buffer, 0, buffer.Length); }
-                    catch { break; }
-                    if (bytesRead == 0) break;
+                    stream.Close();
+                    client.Close();
+                    return;
+                }
 
-                    string rawRequest = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    string firstLine = rawRequest.Split('\n')[0].Trim();
-                    string[] parts = firstLine.Split(' ');
-                    if (parts.Length < 2) break;
+                string firstLine = request.Split('\n')[0].Trim();
+                string[] parts = firstLine.Split(' ');
+                if (parts.Length < 2)
+                {
+                    stream.Close();
+                    client.Close();
+                    return;
+                }
 
-                    string method = parts[0];
-                    string urlPath = parts[1].Split('?')[0];
+                string urlPath = parts[1].Split('?')[0];
 
-                    bool keepAlive = rawRequest.Contains("Connection: keep-alive");
-
-                    Console.WriteLine("http: " + method + " " + urlPath);
-
-                    if (urlPath == "/favicon.ico")
-                    {
-                        SendResponse(stream, "404 Not Found", "text/plain", "", false);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    if (urlPath == "/stop")
-                    {
-                        SendResponse(stream, "200 OK", "text/html", "<h1>Stopped.</h1>", false);
-                        stream.Close();
-                        client.Close();
-                        throw new Exception("stop requested");
-                    }
-
-                    string filePath = rootFolder.TrimEnd('/') + "/" + urlPath.TrimStart('/');
-
-                    if (urlPath == "/" || Directory.Exists(filePath))
-                    {
-                        if (urlPath == "/") filePath = rootFolder;
-                        string index = Path.Combine(filePath, "index.html");
-                        if (File.Exists(index))
-                            filePath = index;
-                        else
-                        {
-                            string listing = BuildDirectoryListing(urlPath, filePath);
-                            SendResponse(stream, "200 OK", "text/html", listing, keepAlive);
-                            if (!keepAlive) break;
-                            continue;
-                        }
-                    }
-
-                    if (!File.Exists(filePath))
-                    {
-                        SendResponse(stream, "404 Not Found", "text/html",
-                            "<html><body><h1>404</h1></body></html>", keepAlive);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    if (!PermissionManager.CanAccess(filePath, UserManager.currentUser))
-                    {
-                        SendResponse(stream, "403 Forbidden", "text/html",
-                            "<html><body><h1>403</h1></body></html>", keepAlive);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    string ext = "";
-                    int dotIdx = filePath.LastIndexOf('.');
-                    if (dotIdx >= 0) ext = filePath.Substring(dotIdx).ToLower();
-                    string mime = MimeTypes.ContainsKey(ext) ? MimeTypes[ext] : "application/octet-stream";
-
-                    byte[] fileData = File.ReadAllBytes(filePath);
-
-                    string responseHeader =
-                        "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: " + mime + "\r\n" +
-                        "Content-Length: " + fileData.Length + "\r\n" +
-                        "Connection: " + (keepAlive ? "keep-alive" : "close") + "\r\n\r\n";
-
-                    byte[] headerBytes = Encoding.ASCII.GetBytes(responseHeader);
-                    stream.Write(headerBytes, 0, headerBytes.Length);
-                    stream.Write(fileData, 0, fileData.Length);
-
-                    if (!keepAlive) break;
+                if (urlPath == "/favicon.ico")
+                {
+                    SendResponse(stream, "404 Not Found", "text/plain", "");
+                }
+                else if (urlPath == "/stop")
+                {
+                    SendResponse(stream, "200 OK", "text/html", "<h1>Stopped.</h1>");
+                    stream.Close();
+                    client.Close();
+                    throw new Exception("stop requested");
+                }
+                else
+                {
+                    HandleRequest(stream, urlPath, rootFolder);
                 }
 
                 stream.Close();
@@ -172,19 +147,84 @@ namespace Shinx.Commands
             catch (Exception e)
             {
                 if (e.Message == "stop requested") throw;
-                Console.WriteLine("http: client error: " + e.Message);
                 try { client.Close(); } catch { }
             }
         }
 
-        private void SendResponse(NetworkStream stream, string status, string contentType, string body, bool keepAlive)
+        private string ReadRequest(NetworkStream stream)
+        {
+            byte[] buffer = new byte[4096];
+            int total = 0;
+
+            try
+            {
+                int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                if (bytesRead == 0) return null;
+                total = bytesRead;
+            }
+            catch { return null; }
+
+            return Encoding.ASCII.GetString(buffer, 0, total);
+        }
+
+        private void HandleRequest(NetworkStream stream, string urlPath, string rootFolder)
+        {
+            string filePath = rootFolder.TrimEnd('/') + "/" + urlPath.TrimStart('/');
+
+            if (urlPath == "/" || Directory.Exists(filePath))
+            {
+                if (urlPath == "/") filePath = rootFolder;
+                string index = Path.Combine(filePath, "index.html");
+                if (File.Exists(index))
+                    filePath = index;
+                else
+                {
+                    string listing = BuildDirectoryListing(urlPath, filePath);
+                    SendResponse(stream, "200 OK", "text/html", listing);
+                    return;
+                }
+            }
+
+            if (!File.Exists(filePath))
+            {
+                SendResponse(stream, "404 Not Found", "text/html",
+                    "<html><body><h1>404</h1></body></html>");
+                return;
+            }
+
+            if (!PermissionManager.CanAccess(filePath, UserManager.currentUser))
+            {
+                SendResponse(stream, "403 Forbidden", "text/html",
+                    "<html><body><h1>403</h1></body></html>");
+                return;
+            }
+
+            string ext = "";
+            int dotIdx = filePath.LastIndexOf('.');
+            if (dotIdx >= 0) ext = filePath.Substring(dotIdx).ToLower();
+            string mime = MimeTypes.ContainsKey(ext) ? MimeTypes[ext] : "application/octet-stream";
+
+            byte[] fileData = File.ReadAllBytes(filePath);
+
+            string header =
+                "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: " + mime + "\r\n" +
+                "Content-Length: " + fileData.Length + "\r\n" +
+                "Connection: close\r\n\r\n";
+
+            byte[] headerBytes = Encoding.ASCII.GetBytes(header);
+            stream.Write(headerBytes, 0, headerBytes.Length);
+            stream.Write(fileData, 0, fileData.Length);
+        }
+
+        private void SendResponse(NetworkStream stream, string status, string contentType, string body)
         {
             byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
             string header =
                 "HTTP/1.1 " + status + "\r\n" +
                 "Content-Type: " + contentType + "\r\n" +
                 "Content-Length: " + bodyBytes.Length + "\r\n" +
-                "Connection: " + (keepAlive ? "keep-alive" : "close") + "\r\n\r\n";
+                "Connection: close\r\n\r\n";
             byte[] headerBytes = Encoding.ASCII.GetBytes(header);
             stream.Write(headerBytes, 0, headerBytes.Length);
             stream.Write(bodyBytes, 0, bodyBytes.Length);

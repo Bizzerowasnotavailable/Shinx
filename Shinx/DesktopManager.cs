@@ -9,16 +9,15 @@ namespace Shinx
 {
     public static class DesktopManager
     {
-        public static bool Running = false;
+        public static volatile bool Running = false;
         private static Canvas vbe;
-        private static int frameCount = 0;
 
         private static Color taskbarPen = Color.FromArgb(255, 40, 40, 40);
         private static Color startBtnPen = Color.LightGray;
 
         public static void Start()
         {
-            while (System.Console.KeyAvailable) { System.Console.ReadKey(true); }
+            var vc = VirtualConsole.Current;
 
             Running = true;
 
@@ -42,9 +41,9 @@ namespace Shinx
 
                     Shinx.GUI.WindowManager.DrawWindows(vbe);
 
-                    if (System.Console.KeyAvailable)
+                    if (vc != null && vc.KeyAvailable)
                     {
-                        var key = System.Console.ReadKey(true);
+                        var key = vc.ReadKey(true);
                         if (Shinx.GUI.WindowManager.drawOrder.Count > 0)
                         {
                             string topAppID = Shinx.GUI.WindowManager.drawOrder[Shinx.GUI.WindowManager.drawOrder.Count - 1];
@@ -80,19 +79,17 @@ namespace Shinx
                     Shinx.GUI.Mouse.DrawMouse(vbe, mx, my);
 
                     vbe.Display();
-
-                    frameCount++;
-                    if (frameCount > 1000) { GC.Collect(); frameCount = 0; }
                 }
 
                 vbe.Disable();
                 vbe = null;
-                System.Console.Clear();
+                if (vc != null) vc.Clear();
+                else System.Console.Clear();
             }
             catch (Exception e)
             {
                 vbe = null;
-                System.Console.WriteLine("GUI Panic: " + e.Message);
+                Console.WriteLine("GUI Panic: " + e.Message);
             }
         }
     }

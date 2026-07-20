@@ -31,7 +31,9 @@ namespace Shinx.GUI
                     vbe.DrawFilledRectangle(Color.White, x + 10, y + 30, 200, 40);
                     vbe.DrawRectangle(Color.DarkGray, x + 10, y + 30, 200, 40);
 
-                    uint textX = (uint)(x + 200 - (calcInput.Length * 8));
+                    int textXInt = x + 200 - (calcInput.Length * 8);
+                    if (textXInt < x + 10) textXInt = x + 10;
+                    uint textX = (uint)textXInt;
                     ASC16.DrawACSIIString(vbe, calcInput, Color.Black, textX, (uint)y + 42);
 
                     string[] buttons = { "7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "C", "0", "=", "+" };

@@ -7,7 +7,7 @@ namespace Shinx.Commands
     {
         public void Execute(string[] args, HashSet<char> parameters)
         {
-            Console.Clear(); // shrimple as that
+            VirtualConsole.Current?.Clear();
         }
     }
 }

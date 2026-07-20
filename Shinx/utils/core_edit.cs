@@ -34,6 +34,8 @@ namespace Shinx.Commands
                 return;
             }
 
+            var vc = VirtualConsole.Current;
+
             lines.Clear();
             if (File.Exists(path))
             {
@@ -51,17 +53,17 @@ namespace Shinx.Commands
 
             while (running)
             {
-                Render();
-                HandleInput();
+                Render(vc);
+                HandleInput(vc);
             }
 
-            Console.Clear();
+            vc.Clear();
         }
 
-        private void Render()
+        private void Render(VirtualConsole vc)
         {
-            int screenWidth = Console.WindowWidth;
-            int screenHeight = Console.WindowHeight;
+            int screenWidth = vc.WindowWidth;
+            int screenHeight = vc.WindowHeight;
             int viewHeight = screenHeight - 4;
             int viewWidth = screenWidth - 4;
 
@@ -77,49 +79,51 @@ namespace Shinx.Commands
 
             if (_needsFullRedraw)
             {
-                Console.Clear();
-                Console.SetCursorPosition(0, 0);
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.Write($" SHINX EDIT | L: {currentLine + 1} C: {currentCol + 1} | {path}".PadRight(screenWidth - 1));
-                Console.ResetColor();
+                vc.Clear();
+                vc.SetCursorPosition(0, 0);
+                vc.SetBackground(ConsoleColor.Gray);
+                vc.SetForeground(ConsoleColor.Black);
+                vc.Write($" SHINX EDIT | L: {currentLine + 1} C: {currentCol + 1} | {path}".PadRight(screenWidth - 1));
+                vc.ResetColor();
 
                 for (int i = 0; i < viewHeight; i++)
                 {
                     int lineIndex = topLine + i;
-                    Console.SetCursorPosition(0, i + 1);
-                    DrawLine(lineIndex, viewWidth);
+                    vc.SetCursorPosition(0, i + 1);
+                    DrawLine(vc, lineIndex, viewWidth);
                 }
 
-                Console.SetCursorPosition(0, screenHeight - 2);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(statusMessage.PadRight(screenWidth - 1));
-                Console.SetCursorPosition(0, screenHeight - 1);
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.Write(" ^O Save    ^X Exit    ^L GoTo Line ".PadRight(screenWidth - 1));
-                Console.ResetColor();
+                vc.SetCursorPosition(0, screenHeight - 2);
+                vc.SetForeground(ConsoleColor.Cyan);
+                vc.Write(statusMessage.PadRight(screenWidth - 1));
+                vc.SetCursorPosition(0, screenHeight - 1);
+                vc.SetBackground(ConsoleColor.White);
+                vc.SetForeground(ConsoleColor.Black);
+                vc.Write(" ^O Save    ^X Exit    ^L GoTo Line ".PadRight(screenWidth - 1));
+                vc.ResetColor();
 
                 _needsFullRedraw = false;
             }
             else
             {
-                Console.SetCursorPosition(0, 0);
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.Write($" SHINX EDIT | L: {currentLine + 1} C: {currentCol + 1} | {path}".PadRight(screenWidth - 1));
-                Console.ResetColor();
+                vc.SetCursorPosition(0, 0);
+                vc.SetBackground(ConsoleColor.Gray);
+                vc.SetForeground(ConsoleColor.Black);
+                vc.Write($" SHINX EDIT | L: {currentLine + 1} C: {currentCol + 1} | {path}".PadRight(screenWidth - 1));
+                vc.ResetColor();
 
-                Console.SetCursorPosition(0, (currentLine - topLine) + 1);
-                DrawLine(currentLine, viewWidth);
+                vc.SetCursorPosition(0, (currentLine - topLine) + 1);
+                DrawLine(vc, currentLine, viewWidth);
             }
 
             int cursorX = (currentCol - leftChar) + 2;
             int cursorY = (currentLine - topLine) + 1;
-            Console.SetCursorPosition(Math.Clamp(cursorX, 0, screenWidth - 1), Math.Clamp(cursorY, 0, screenHeight - 1));
+            vc.SetCursorPosition(
+                Math.Clamp(cursorX, 0, screenWidth - 1),
+                Math.Clamp(cursorY, 0, screenHeight - 1));
         }
 
-        private void DrawLine(int lineIndex, int viewWidth)
+        private void DrawLine(VirtualConsole vc, int lineIndex, int viewWidth)
         {
             if (lineIndex < lines.Count)
             {
@@ -130,26 +134,26 @@ namespace Shinx.Commands
 
                 if (lineIndex == currentLine)
                 {
-                    Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    Console.Write("> " + visibleText.PadRight(viewWidth));
-                    Console.ResetColor();
+                    vc.SetBackground(ConsoleColor.DarkBlue);
+                    vc.Write("> " + visibleText.PadRight(viewWidth));
+                    vc.ResetColor();
                 }
                 else
                 {
-                    Console.Write("  " + visibleText.PadRight(viewWidth));
+                    vc.Write("  " + visibleText.PadRight(viewWidth));
                 }
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write("~".PadRight(viewWidth + 2));
-                Console.ResetColor();
+                vc.SetForeground(ConsoleColor.DarkGray);
+                vc.Write("~".PadRight(viewWidth + 2));
+                vc.ResetColor();
             }
         }
 
-        private void HandleInput()
+        private void HandleInput(VirtualConsole vc)
         {
-            ConsoleKeyInfo key = Console.ReadKey(true);
+            ConsoleKeyInfo key = vc.ReadKey(true);
 
             if ((key.Modifiers & ConsoleModifiers.Control) != 0)
             {
@@ -157,7 +161,7 @@ namespace Shinx.Commands
                 {
                     case ConsoleKey.O: SaveFile(); _needsFullRedraw = true; break;
                     case ConsoleKey.X: running = false; break;
-                    case ConsoleKey.L: ShowGoToLinePrompt(); _needsFullRedraw = true; break;
+                    case ConsoleKey.L: ShowGoToLinePrompt(vc); _needsFullRedraw = true; break;
                 }
                 return;
             }
@@ -230,11 +234,11 @@ namespace Shinx.Commands
             }
         }
 
-        private void ShowGoToLinePrompt()
+        private void ShowGoToLinePrompt(VirtualConsole vc)
         {
             statusMessage = "Line: ";
-            Render();
-            string input = Console.ReadLine();
+            Render(vc);
+            string input = vc.ReadLine();
             if (int.TryParse(input, out int l) && l > 0 && l <= lines.Count)
             {
                 currentLine = l - 1;

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Threading;
 
 namespace Shinx
 {
@@ -8,6 +8,17 @@ namespace Shinx
     {
         public static string currentDirectory = "/";
         public static List<string> history = new List<string>();
+
+        public static volatile bool CancelRequested;
+        public static readonly object ConsoleLock = new object();
+        public static Thread CommandThread;
+
+        public static void Cancel()
+        {
+            CancelRequested = true;
+            lock (ConsoleLock)
+                Console.WriteLine("^C");
+        }
 
         public static void returnDirectory()
         {

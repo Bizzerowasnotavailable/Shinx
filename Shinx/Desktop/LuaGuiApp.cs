@@ -37,27 +37,30 @@ namespace Shinx.GUI
             IsVisible = open;
             if (!IsVisible) return;
 
-            LuaBridge.SetGuiCanvas(canvas, X, Y, Width, Height);
-
-            var L = LuaBridge.State;
-            L.GetGlobal(_drawFn);
-            if (L.Type(-1) == LuaType.LUA_TFUNCTION)
+            LuaExecutor.Run(() =>
             {
-                var status = L.PCall(0, 0, 0);
-                if (status != ThreadStatus.LUA_OK)
+                LuaBridge.SetGuiCanvas(canvas, X, Y, Width, Height);
+
+                var L = LuaExecutor.State;
+                L.GetGlobal(_drawFn);
+                if (L.Type(-1) == LuaType.LUA_TFUNCTION)
                 {
-                    string err = L.L_ToString(-1) ?? "draw error";
-                    L.Pop(1);
-                    ASC16.DrawACSIIString(canvas, err.Substring(0, Math.Min(err.Length, 60)),
-                        Color.Red, (uint)(X + 4), (uint)(Y + 24));
+                    var status = L.PCall(0, 0, 0);
+                    if (status != ThreadStatus.LUA_OK)
+                    {
+                        string err = L.L_ToString(-1) ?? "draw error";
+                        L.Pop(1);
+                        ASC16.DrawACSIIString(canvas, err.Substring(0, Math.Min(err.Length, 60)),
+                            Color.Red, (uint)(X + 4), (uint)(Y + 24));
+                    }
                 }
-            }
-            else
-            {
-                L.Pop(1);
-            }
+                else
+                {
+                    L.Pop(1);
+                }
 
-            LuaBridge.ClearGuiCanvas();
+                LuaBridge.ClearGuiCanvas();
+            });
         }
 
         public void HandleKey(ConsoleKeyInfo key)
@@ -66,46 +69,49 @@ namespace Shinx.GUI
 
             if (!string.IsNullOrEmpty(LuaBridge.InputFocus))
             {
-                LuaBridge.EnqueueKey(key);
+                LuaExecutor.Run(() => LuaBridge.EnqueueKey(key));
                 return;
             }
 
             if (string.IsNullOrEmpty(_keyFn)) return;
 
-            var L = LuaBridge.State;
-            L.GetGlobal(_keyFn);
-            if (L.Type(-1) == LuaType.LUA_TFUNCTION)
+            LuaExecutor.Run(() =>
             {
-                L.NewTable();
+                var L = LuaExecutor.State;
+                L.GetGlobal(_keyFn);
+                if (L.Type(-1) == LuaType.LUA_TFUNCTION)
+                {
+                    L.NewTable();
 
-                L.PushString("key");
-                L.PushString(key.Key.ToString());
-                L.SetTable(-3);
+                    L.PushString("key");
+                    L.PushString(key.Key.ToString());
+                    L.SetTable(-3);
 
-                L.PushString("char");
-                L.PushString(key.KeyChar == '\0' ? "" : key.KeyChar.ToString());
-                L.SetTable(-3);
+                    L.PushString("char");
+                    L.PushString(key.KeyChar == '\0' ? "" : key.KeyChar.ToString());
+                    L.SetTable(-3);
 
-                L.PushString("ctrl");
-                L.PushBoolean((key.Modifiers & ConsoleModifiers.Control) != 0);
-                L.SetTable(-3);
+                    L.PushString("ctrl");
+                    L.PushBoolean((key.Modifiers & ConsoleModifiers.Control) != 0);
+                    L.SetTable(-3);
 
-                L.PushString("shift");
-                L.PushBoolean((key.Modifiers & ConsoleModifiers.Shift) != 0);
-                L.SetTable(-3);
+                    L.PushString("shift");
+                    L.PushBoolean((key.Modifiers & ConsoleModifiers.Shift) != 0);
+                    L.SetTable(-3);
 
-                L.PushString("alt");
-                L.PushBoolean((key.Modifiers & ConsoleModifiers.Alt) != 0);
-                L.SetTable(-3);
+                    L.PushString("alt");
+                    L.PushBoolean((key.Modifiers & ConsoleModifiers.Alt) != 0);
+                    L.SetTable(-3);
 
-                var status = L.PCall(1, 0, 0);
-                if (status != ThreadStatus.LUA_OK)
+                    var status = L.PCall(1, 0, 0);
+                    if (status != ThreadStatus.LUA_OK)
+                        L.Pop(1);
+                }
+                else
+                {
                     L.Pop(1);
-            }
-            else
-            {
-                L.Pop(1);
-            }
+                }
+            });
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Shinx
 {
     public static class LuaBridge
     {
-        public static ILuaState State;
 
         private static Canvas _guiCanvas;
         private static int _guiX, _guiY, _guiW, _guiH;
@@ -53,78 +52,75 @@ namespace Shinx
             _inGuiDraw = false;
         }
         private static readonly string[] blockedCommands = { "rm", "userdel", "groupdel", "chown", "chgrp", "useradd", "http", "net", "lua", "passwd", "su" };
-        public static void Init()
+        public static void Setup(ILuaState state)
         {
-            State = LuaAPI.NewState();
-            State.L_OpenLibs();
+            state.PushNil(); state.SetGlobal("load");
+            state.PushNil(); state.SetGlobal("loadfile");
+            state.PushNil(); state.SetGlobal("dofile");
+            state.PushNil(); state.SetGlobal("require");
+            state.PushNil(); state.SetGlobal("io");
+            state.PushNil(); state.SetGlobal("os");
+            state.PushNil(); state.SetGlobal("debug");
 
-            State.PushNil(); State.SetGlobal("load");
-            State.PushNil(); State.SetGlobal("loadfile");
-            State.PushNil(); State.SetGlobal("dofile");
-            State.PushNil(); State.SetGlobal("require");
-            State.PushNil(); State.SetGlobal("io");
-            State.PushNil(); State.SetGlobal("os");
-            State.PushNil(); State.SetGlobal("debug");
+            state.NewTable();
 
-            State.NewTable();
+            state.PushCSharpFunction(L_WriteLine); state.SetField(-2, "writeline");
+            state.PushCSharpFunction(L_Write); state.SetField(-2, "write");
+            state.PushCSharpFunction(L_Clear); state.SetField(-2, "clear");
+            state.PushCSharpFunction(L_Color); state.SetField(-2, "color");
+            state.PushCSharpFunction(L_ResetColor); state.SetField(-2, "resetcolor");
+            state.PushCSharpFunction(L_Read); state.SetField(-2, "read");
+            state.PushCSharpFunction(L_ReadLine); state.SetField(-2, "readline");
+            state.PushCSharpFunction(L_Exec); state.SetField(-2, "exec");
+            state.PushCSharpFunction(L_CurrentDir); state.SetField(-2, "currentdir");
+            state.PushCSharpFunction(L_SetDir); state.SetField(-2, "setdir");
+            state.PushCSharpFunction(L_CurrentUser); state.SetField(-2, "currentuser");
+            state.PushCSharpFunction(L_IsRoot); state.SetField(-2, "isroot");
+            state.PushCSharpFunction(L_Register); state.SetField(-2, "register");
+            state.PushCSharpFunction(L_Args); state.SetField(-2, "args");
+            state.PushCSharpFunction(L_Params); state.SetField(-2, "params");
+            state.PushCSharpFunction(L_Time); state.SetField(-2, "time");
+            state.PushCSharpFunction(L_ListDir); state.SetField(-2, "listdir");
+            state.PushCSharpFunction(L_ReadFile); state.SetField(-2, "readfile");
+            state.PushCSharpFunction(L_WriteFile); state.SetField(-2, "writefile");
+            state.PushCSharpFunction(L_Exists); state.SetField(-2, "exists");
+            state.PushCSharpFunction(L_MkDir); state.SetField(-2, "mkdir");
+            state.PushCSharpFunction(L_Delete); state.SetField(-2, "delete");
+            state.PushCSharpFunction(L_MoveFile); state.SetField(-2, "movefile");
+            state.PushCSharpFunction(L_CopyFile); state.SetField(-2, "copyfile");
+            state.PushCSharpFunction(L_CanAccess); state.SetField(-2, "canaccess");
+            state.PushCSharpFunction(L_GetOwner); state.SetField(-2, "getowner");
+            state.PushCSharpFunction(L_CPUInfo); state.SetField(-2, "fetchcpu");
+            state.PushCSharpFunction(L_RAMInfo); state.SetField(-2, "fetchram");
+            state.PushCSharpFunction(L_Sleep); state.SetField(-2, "sleep");
+            state.PushCSharpFunction(L_SetCursor); state.SetField(-2, "setcursor");
+            state.PushCSharpFunction(L_HasKey); state.SetField(-2, "haskey");
+            state.PushCSharpFunction(L_GetKey); state.SetField(-2, "getkey");
+            state.PushCSharpFunction(L_HideCursor); state.SetField(-2, "hidecursor");
+            state.PushCSharpFunction(L_ShowCursor); state.SetField(-2, "showcursor");
+            state.PushCSharpFunction(L_NetIsConnected); state.SetField(-2, "netconnected");
+            state.PushCSharpFunction(L_NetStatus); state.SetField(-2, "netstatus");
+            state.PushCSharpFunction(L_NetResolve); state.SetField(-2, "netresolve");
+            state.PushCSharpFunction(L_NetGet); state.SetField(-2, "netget");
+            state.PushCSharpFunction(L_HttpServe); state.SetField(-2, "httpserve");
+            state.PushCSharpFunction(L_GuiRegister); state.SetField(-2, "gui_register");
+            state.PushCSharpFunction(L_GuiClose); state.SetField(-2, "gui_close");
+            state.PushCSharpFunction(L_GuiRect); state.SetField(-2, "gui_rect");
+            state.PushCSharpFunction(L_GuiRectFill); state.SetField(-2, "gui_rectfill");
+            state.PushCSharpFunction(L_GuiLine); state.SetField(-2, "gui_line");
+            state.PushCSharpFunction(L_GuiMouse); state.SetField(-2, "gui_mouse");
+            state.PushCSharpFunction(L_GuiClick); state.SetField(-2, "gui_click");
+            state.PushCSharpFunction(L_GuiWidth); state.SetField(-2, "gui_width");
+            state.PushCSharpFunction(L_GuiHeight); state.SetField(-2, "gui_height");
+            state.PushCSharpFunction(L_GuiButton); state.SetField(-2, "gui_button");
+            state.PushCSharpFunction(L_GuiLabel); state.SetField(-2, "gui_label");
+            state.PushCSharpFunction(L_GuiTextbox); state.SetField(-2, "gui_textbox");
+            state.PushCSharpFunction(L_GuiInput); state.SetField(-2, "gui_input");
+            state.PushCSharpFunction(L_GuiCheckbox); state.SetField(-2, "gui_checkbox");
+            state.PushCSharpFunction(L_GuiProgressbar); state.SetField(-2, "gui_progressbar");
+            state.PushCSharpFunction(L_GuiClearState); state.SetField(-2, "gui_clearstate");
 
-            State.PushCSharpFunction(L_WriteLine); State.SetField(-2, "writeline");
-            State.PushCSharpFunction(L_Write); State.SetField(-2, "write");
-            State.PushCSharpFunction(L_Clear); State.SetField(-2, "clear");
-            State.PushCSharpFunction(L_Color); State.SetField(-2, "color");
-            State.PushCSharpFunction(L_ResetColor); State.SetField(-2, "resetcolor");
-            State.PushCSharpFunction(L_Read); State.SetField(-2, "read");
-            State.PushCSharpFunction(L_ReadLine); State.SetField(-2, "readline");
-            State.PushCSharpFunction(L_Exec); State.SetField(-2, "exec");
-            State.PushCSharpFunction(L_CurrentDir); State.SetField(-2, "currentdir");
-            State.PushCSharpFunction(L_SetDir); State.SetField(-2, "setdir");
-            State.PushCSharpFunction(L_CurrentUser); State.SetField(-2, "currentuser");
-            State.PushCSharpFunction(L_IsRoot); State.SetField(-2, "isroot");
-            State.PushCSharpFunction(L_Register); State.SetField(-2, "register");
-            State.PushCSharpFunction(L_Args); State.SetField(-2, "args");
-            State.PushCSharpFunction(L_Params); State.SetField(-2, "params");
-            State.PushCSharpFunction(L_Time); State.SetField(-2, "time");
-            State.PushCSharpFunction(L_ListDir); State.SetField(-2, "listdir");
-            State.PushCSharpFunction(L_ReadFile); State.SetField(-2, "readfile");
-            State.PushCSharpFunction(L_WriteFile); State.SetField(-2, "writefile");
-            State.PushCSharpFunction(L_Exists); State.SetField(-2, "exists");
-            State.PushCSharpFunction(L_MkDir); State.SetField(-2, "mkdir");
-            State.PushCSharpFunction(L_Delete); State.SetField(-2, "delete");
-            State.PushCSharpFunction(L_MoveFile); State.SetField(-2, "movefile");
-            State.PushCSharpFunction(L_CopyFile); State.SetField(-2, "copyfile");
-            State.PushCSharpFunction(L_CanAccess); State.SetField(-2, "canaccess");
-            State.PushCSharpFunction(L_GetOwner); State.SetField(-2, "getowner");
-            State.PushCSharpFunction(L_CPUInfo); State.SetField(-2, "fetchcpu");
-            State.PushCSharpFunction(L_RAMInfo); State.SetField(-2, "fetchram");
-            State.PushCSharpFunction(L_Sleep); State.SetField(-2, "sleep");
-            State.PushCSharpFunction(L_SetCursor); State.SetField(-2, "setcursor");
-            State.PushCSharpFunction(L_HasKey); State.SetField(-2, "haskey");
-            State.PushCSharpFunction(L_GetKey); State.SetField(-2, "getkey");
-            State.PushCSharpFunction(L_HideCursor); State.SetField(-2, "hidecursor");
-            State.PushCSharpFunction(L_ShowCursor); State.SetField(-2, "showcursor");
-            State.PushCSharpFunction(L_NetIsConnected); State.SetField(-2, "netconnected");
-            State.PushCSharpFunction(L_NetStatus); State.SetField(-2, "netstatus");
-            State.PushCSharpFunction(L_NetResolve); State.SetField(-2, "netresolve");
-            State.PushCSharpFunction(L_NetGet); State.SetField(-2, "netget");
-            State.PushCSharpFunction(L_HttpServe); State.SetField(-2, "httpserve");
-            State.PushCSharpFunction(L_GuiRegister); State.SetField(-2, "gui_register");
-            State.PushCSharpFunction(L_GuiClose); State.SetField(-2, "gui_close");
-            State.PushCSharpFunction(L_GuiRect); State.SetField(-2, "gui_rect");
-            State.PushCSharpFunction(L_GuiRectFill); State.SetField(-2, "gui_rectfill");
-            State.PushCSharpFunction(L_GuiLine); State.SetField(-2, "gui_line");
-            State.PushCSharpFunction(L_GuiMouse); State.SetField(-2, "gui_mouse");
-            State.PushCSharpFunction(L_GuiClick); State.SetField(-2, "gui_click");
-            State.PushCSharpFunction(L_GuiWidth); State.SetField(-2, "gui_width");
-            State.PushCSharpFunction(L_GuiHeight); State.SetField(-2, "gui_height");
-            State.PushCSharpFunction(L_GuiButton); State.SetField(-2, "gui_button");
-            State.PushCSharpFunction(L_GuiLabel); State.SetField(-2, "gui_label");
-            State.PushCSharpFunction(L_GuiTextbox); State.SetField(-2, "gui_textbox");
-            State.PushCSharpFunction(L_GuiInput); State.SetField(-2, "gui_input");
-            State.PushCSharpFunction(L_GuiCheckbox); State.SetField(-2, "gui_checkbox");
-            State.PushCSharpFunction(L_GuiProgressbar); State.SetField(-2, "gui_progressbar");
-            State.PushCSharpFunction(L_GuiClearState); State.SetField(-2, "gui_clearstate");
-
-            State.SetGlobal("shinx");
+            state.SetGlobal("shinx");
         }
         private static string ResolvePath(string path)
         {
@@ -132,26 +128,33 @@ namespace Shinx
             if (path.StartsWith("/")) return path;
             return Path.Combine(Shell.currentDirectory, path).Replace('\\', '/');
         }
-        private static int L_WriteLine(ILuaState lua) { Console.WriteLine(lua.L_ToString(1)); return 0; }
-        private static int L_Write(ILuaState lua) { Console.Write(lua.L_ToString(1)); return 0; }
-        private static int L_Clear(ILuaState lua) { Console.Clear(); return 0; }
+        private static int L_WriteLine(ILuaState lua) { var vc = VirtualConsole.Current; if (vc != null) vc.WriteLine(lua.L_ToString(1)); else Console.WriteLine(lua.L_ToString(1)); return 0; }
+        private static int L_Write(ILuaState lua) { var vc = VirtualConsole.Current; if (vc != null) vc.Write(lua.L_ToString(1)); else Console.Write(lua.L_ToString(1)); return 0; }
+        private static int L_Clear(ILuaState lua) { var vc = VirtualConsole.Current; if (vc != null) vc.Clear(); else Console.Clear(); return 0; }
         private static int L_Color(ILuaState lua)
         {
             string fg = lua.L_CheckString(1);
+            var vc = VirtualConsole.Current;
             if (TryParseColor(fg, out ConsoleColor fgColor))
-                Console.ForegroundColor = fgColor;
+            {
+                if (vc != null) vc.SetForeground(fgColor);
+                else Console.ForegroundColor = fgColor;
+            }
 
             if (lua.GetTop() >= 2 && lua.Type(2) == LuaType.LUA_TSTRING)
             {
                 string bg = lua.L_CheckString(2);
                 if (TryParseColor(bg, out ConsoleColor bgColor))
-                    Console.BackgroundColor = bgColor;
+                {
+                    if (vc != null) vc.SetBackground(bgColor);
+                    else Console.BackgroundColor = bgColor;
+                }
             }
             return 0;
         }
-        private static int L_ResetColor(ILuaState lua) { Console.ResetColor(); return 0; }
-        private static int L_Read(ILuaState lua) { lua.PushString(Console.ReadLine()); return 1; }
-        private static int L_ReadLine(ILuaState lua) { string prompt = lua.L_CheckString(1); Console.Write(prompt); lua.PushString(Console.ReadLine()); return 1; }
+        private static int L_ResetColor(ILuaState lua) { var vc = VirtualConsole.Current; if (vc != null) vc.ResetColor(); else Console.ResetColor(); return 0; }
+        private static int L_Read(ILuaState lua) { var vc = VirtualConsole.Current; lua.PushString(vc != null ? vc.ReadLine() : Console.ReadLine()); return 1; }
+        private static int L_ReadLine(ILuaState lua) { string prompt = lua.L_CheckString(1); var vc = VirtualConsole.Current; if (vc != null) { vc.Write(prompt); lua.PushString(vc.ReadLine()); } else { Console.Write(prompt); lua.PushString(Console.ReadLine()); } return 1; }
         private static int L_Exec(ILuaState lua)
         {
             string cmd = lua.L_ToString(1);
@@ -393,20 +396,21 @@ namespace Shinx
             lua.PushString(ram); return 1;
         }
         private static int L_Sleep(ILuaState lua) { int ms = lua.L_CheckInteger(1); System.Threading.Thread.Sleep(ms); return 0; }
-        private static int L_SetCursor(ILuaState lua) { int x = lua.L_CheckInteger(1); int y = lua.L_CheckInteger(2); x = Math.Clamp(x, 0, ScreenManager.Width - 1); y = Math.Clamp(y, 0, ScreenManager.Height - 1); Console.SetCursorPosition(x, y); return 0; }
-        private static int L_HasKey(ILuaState lua) { lua.PushBoolean(Console.KeyAvailable); return 1; }
+        private static int L_SetCursor(ILuaState lua) { int x = lua.L_CheckInteger(1); int y = lua.L_CheckInteger(2); x = Math.Clamp(x, 0, ScreenManager.Width - 1); y = Math.Clamp(y, 0, ScreenManager.Height - 1); var vc = VirtualConsole.Current; if (vc != null) vc.SetCursorPosition(x, y); else Console.SetCursorPosition(x, y); return 0; }
+        private static int L_HasKey(ILuaState lua) { var vc = VirtualConsole.Current; lua.PushBoolean(vc != null ? vc.KeyAvailable : Console.KeyAvailable); return 1; }
         private static int L_GetKey(ILuaState lua)
         {
-            if (Console.KeyAvailable)
+            var vc = VirtualConsole.Current;
+            if (vc != null ? vc.KeyAvailable : Console.KeyAvailable)
             {
-                ConsoleKeyInfo key = Console.ReadKey(true);
+                ConsoleKeyInfo key = vc != null ? vc.ReadKey(true) : Console.ReadKey(true);
                 lua.PushString(key.KeyChar.ToString());
             }
             else lua.PushNil();
             return 1;
         }
-        private static int L_HideCursor(ILuaState lua) { Console.CursorVisible = false; return 0; }
-        private static int L_ShowCursor(ILuaState lua) { Console.CursorVisible = true; return 0; }
+        private static int L_HideCursor(ILuaState lua) { try { Console.CursorVisible = false; } catch { } return 0; }
+        private static int L_ShowCursor(ILuaState lua) { try { Console.CursorVisible = true; } catch { } return 0; }
         private static int L_NetIsConnected(ILuaState lua) { lua.PushBoolean(NetworkManager.IsConnected); return 1; }
         private static int L_NetStatus(ILuaState lua)
         {
@@ -493,23 +497,25 @@ namespace Shinx
         }
         public static void SetArgs(string[] args)
         {
-            State.NewTable();
+            var L = LuaExecutor.State;
+            L.NewTable();
             for (int i = 0; i < args.Length; i++)
             {
-                State.PushString(args[i]);
-                State.RawSetI(-2, i + 1);
+                L.PushString(args[i]);
+                L.RawSetI(-2, i + 1);
             }
-            State.SetGlobal("__args");
+            L.SetGlobal("__args");
         }
         public static void SetParams(HashSet<char> parameters)
         {
-            State.NewTable();
+            var L = LuaExecutor.State;
+            L.NewTable();
             foreach (char p in parameters)
             {
-                State.PushBoolean(true);
-                State.SetField(-2, p.ToString());
+                L.PushBoolean(true);
+                L.SetField(-2, p.ToString());
             }
-            State.SetGlobal("__params");
+            L.SetGlobal("__params");
         }
         public static void ScanBin()
         {
@@ -520,20 +526,21 @@ namespace Shinx
             {
                 if (!file.EndsWith(".lua")) continue;
 
-                int stackBefore = State.GetTop();
+                var L = LuaExecutor.State;
+                int stackBefore = L.GetTop();
                 try
                 {
                     string code = File.ReadAllText(file);
-                    var loadStatus = State.L_LoadString(code);
+                    var loadStatus = L.L_LoadString(code);
                     if (loadStatus != ThreadStatus.LUA_OK)
                     {
-                        Console.WriteLine($"bin: parse error in {file}: " + State.L_ToString(-1));
-                        State.SetTop(stackBefore);
+                        Console.WriteLine($"bin: parse error in {file}: " + L.L_ToString(-1));
+                        L.SetTop(stackBefore);
                         continue;
                     }
-                    var runStatus = State.PCall(0, -1, 0);
+                    var runStatus = L.PCall(0, -1, 0);
                     if (runStatus != ThreadStatus.LUA_OK)
-                        Console.WriteLine($"bin: runtime error in {file}: " + State.L_ToString(-1));
+                        Console.WriteLine($"bin: runtime error in {file}: " + L.L_ToString(-1));
                 }
                 catch (Exception e)
                 {
@@ -541,7 +548,7 @@ namespace Shinx
                 }
                 finally
                 {
-                    State.SetTop(stackBefore);
+                    L.SetTop(stackBefore);
                 }
             }
         }
@@ -618,7 +625,11 @@ namespace Shinx
             int h = lua.GetTop() >= 8 ? lua.L_CheckInteger(8) : 300;
 
             var existing = AppManager.GetApp(id);
-            if (existing != null) AppManager.Apps.Remove(existing);
+            if (existing != null)
+            {
+                AppManager.Apps.Remove(existing);
+                WindowManager.drawOrder.Remove(id);
+            }
 
             var app = new LuaGuiApp(id, displayName, drawFn, keyFn, x, y, w, h);
             AppManager.Apps.Add(app);
@@ -637,6 +648,10 @@ namespace Shinx
             int rh = lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            if (rx < 0) { rw += rx; rx = 0; }
+            if (ry < 0) { rh += ry; ry = 0; }
+            if (rx >= ScreenManager.Width || ry >= ScreenManager.Height) return 0;
+            if (rw <= 0 || rh <= 0) return 0;
             _guiCanvas.DrawFilledRectangle(c, rx, ry, rw, rh);
             return 0;
         }
@@ -649,6 +664,10 @@ namespace Shinx
             int rh = lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            if (rx < 0) { rw += rx; rx = 0; }
+            if (ry < 0) { rh += ry; ry = 0; }
+            if (rx >= ScreenManager.Width || ry >= ScreenManager.Height) return 0;
+            if (rw <= 0 || rh <= 0) return 0;
             _guiCanvas.DrawRectangle(c, rx, ry, rw, rh);
             return 0;
         }
@@ -661,6 +680,9 @@ namespace Shinx
             int y2 = _guiY + 20 + lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
+            if ((x1 < 0 && x2 < 0) || (y1 < 0 && y2 < 0)) return 0;
+            if ((x1 >= ScreenManager.Width && x2 >= ScreenManager.Width) ||
+                (y1 >= ScreenManager.Height && y2 >= ScreenManager.Height)) return 0;
             _guiCanvas.DrawLine(c, x1, y1, x2, y2);
             return 0;
         }

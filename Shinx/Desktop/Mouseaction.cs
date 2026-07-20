@@ -52,15 +52,25 @@ namespace Shinx.GUI
 
         public static void DrawMouse(Canvas vbe, int x, int y)
         {
+            if (x < 0 || y < 0 || x >= ScreenManager.Width || y >= ScreenManager.Height) return;
             DrawCursorInternal(vbe, x + 1, y + 1, borderPen);
             DrawCursorInternal(vbe, x, y, mousePen);
         }
 
         private static void DrawCursorInternal(Canvas vbe, int x, int y, Color color)
         {
+            int maxW = ScreenManager.Width;
+            int maxH = ScreenManager.Height;
             for (int i = 0; i < cursorShape.Length; i++)
             {
-                vbe.DrawLine(color, x + cursorShape[i][0], y + i, x + cursorShape[i][1], y + i);
+                int py = y + i;
+                if (py >= maxH) break;
+                int x0 = x + cursorShape[i][0];
+                int x1 = x + cursorShape[i][1];
+                if (x0 < 0) x0 = 0;
+                if (x1 >= maxW) x1 = maxW - 1;
+                if (x0 < x1)
+                    vbe.DrawLine(color, x0, py, x1, py);
             }
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UniLua;
+
 namespace Shinx.Commands
 {
     public class core_lua : ICommand
@@ -15,10 +16,7 @@ namespace Shinx.Commands
             }
 
             string input = args[0];
-
             string[] scriptArgs = args.Length > 1 ? args[1..] : Array.Empty<string>();
-            LuaBridge.SetArgs(scriptArgs);
-            LuaBridge.SetParams(parameters);
 
             try
             {
@@ -41,12 +39,14 @@ namespace Shinx.Commands
                     }
 
                     string code = File.ReadAllText(path);
-                    var status = LuaBridge.State.L_DoString(code);
-                    if (status != ThreadStatus.LUA_OK)
+                    LuaExecutor.Run(() =>
                     {
-                        Console.WriteLine($"lua: {LuaBridge.State.L_ToString(-1)}");
-                        LuaBridge.State.Pop(1);
-                    }
+                        LuaBridge.SetArgs(scriptArgs);
+                        LuaBridge.SetParams(parameters);
+                        var result = LuaExecutor.DoString(code);
+                        if (result.Status != ThreadStatus.LUA_OK)
+                            Console.WriteLine($"lua: {result.Error}");
+                    });
                 }
                 else
                 {
@@ -56,12 +56,14 @@ namespace Shinx.Commands
                         return;
                     }
 
-                    var status = LuaBridge.State.L_DoString(input);
-                    if (status != ThreadStatus.LUA_OK)
+                    LuaExecutor.Run(() =>
                     {
-                        Console.WriteLine($"lua: {LuaBridge.State.L_ToString(-1)}");
-                        LuaBridge.State.Pop(1);
-                    }
+                        LuaBridge.SetArgs(scriptArgs);
+                        LuaBridge.SetParams(parameters);
+                        var result = LuaExecutor.DoString(input);
+                        if (result.Status != ThreadStatus.LUA_OK)
+                            Console.WriteLine($"lua: {result.Error}");
+                    });
                 }
             }
             catch (Exception e)
