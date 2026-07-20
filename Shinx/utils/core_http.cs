@@ -54,7 +54,15 @@ namespace Shinx.Commands
 
                 while (true)
                 {
-                    TcpClient client = listener.AcceptTcpClient();
+                    TcpClient client;
+                    try { client = listener.AcceptTcpClient(); }
+                    catch
+                    {
+                        try { listener.Stop(); } catch { }
+                        listener = new TcpListener(IPAddress.Any, port);
+                        listener.Start();
+                        continue;
+                    }
                     HandleClient(client, rootFolder);
                 }
             }
