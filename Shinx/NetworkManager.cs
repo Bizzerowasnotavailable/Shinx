@@ -164,6 +164,32 @@ namespace Shinx
                 return null;
             }
         }
+        public static List<string> ResolveAll(string hostname)
+        {
+            if (!IsConnected) return null;
+
+            string norm = hostname.Replace("https://", "").Replace("http://", "");
+
+            try
+            {
+                using (var dnsClient = new DnsClient())
+                {
+                    dnsClient.Connect(Address.Parse(DNSServer));
+                    dnsClient.SendAsk(norm);
+                    List<Address> result = dnsClient.ReceiveAll();
+                    if (result == null) return null;
+                    var addresses = new List<string>();
+                    foreach (var addr in result)
+                        addresses.Add(addr.ToString());
+                    return addresses;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[dns] Failed: " + e.Message);
+                return null;
+            }
+        }
 
         private static void UpdateStatus()
         {

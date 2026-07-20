@@ -53,9 +53,12 @@ namespace Shinx.Commands
                         Console.WriteLine("usage: network resolve <hostname>");
                         return;
                     }
-                    string ip = NetworkManager.Resolve(args[1]);
+                    List<string> ip = NetworkManager.ResolveAll(args[1]);
                     if (ip != null)
-                        Console.WriteLine($"{args[1]} -> {ip}");
+                    {
+                        foreach (var addr in ip)
+                            Console.WriteLine($"{args[1]} -> {addr}");
+                    }
                     break;
 
                 case "disconnect":
