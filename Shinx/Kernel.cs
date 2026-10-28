@@ -8,7 +8,7 @@ using System.Reflection;
 using Cosmos.Kernel.System.Storage;
 using Cosmos.Kernel.System.FileSystem;
 using Cosmos.Kernel.System.FileSystem.Fat;
-using UniLua;
+using Cosmos.Executable.Lua;
 using Sys = Cosmos.Kernel.System;
 
 

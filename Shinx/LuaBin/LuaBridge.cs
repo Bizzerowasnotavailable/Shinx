@@ -7,7 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using UniLua;
+using Cosmos.Executable.Lua;
 using Cosmos.Kernel.System.Input;
 
 namespace Shinx
@@ -392,8 +392,8 @@ namespace Shinx
             catch { ram = "idk"; }
             lua.PushString(ram); return 1;
         }
-        private static int L_Sleep(ILuaState lua) { int ms = lua.L_CheckInteger(1); System.Threading.Thread.Sleep(ms); return 0; }
-        private static int L_SetCursor(ILuaState lua) { int x = lua.L_CheckInteger(1); int y = lua.L_CheckInteger(2); x = Math.Clamp(x, 0, ScreenManager.Width - 1); y = Math.Clamp(y, 0, ScreenManager.Height - 1); Console.SetCursorPosition(x, y); return 0; }
+        private static int L_Sleep(ILuaState lua) { int ms = (int)lua.L_CheckInteger(1); System.Threading.Thread.Sleep(ms); return 0; }
+        private static int L_SetCursor(ILuaState lua) { int x = (int)lua.L_CheckInteger(1); int y = (int)lua.L_CheckInteger(2); x = Math.Clamp(x, 0, ScreenManager.Width - 1); y = Math.Clamp(y, 0, ScreenManager.Height - 1); Console.SetCursorPosition(x, y); return 0; }
         private static int L_HasKey(ILuaState lua) { lua.PushBoolean(Console.KeyAvailable); return 1; }
         private static int L_GetKey(ILuaState lua)
         {
@@ -486,7 +486,7 @@ namespace Shinx
             if (!NetworkManager.IsConnected) { lua.PushBoolean(false); lua.PushString("not connected"); return 2; }
 
             string root = lua.GetTop() >= 1 ? ResolvePath(lua.L_CheckString(1)) : Shell.currentDirectory;
-            int port = lua.GetTop() >= 2 ? lua.L_CheckInteger(2) : 8080;
+            int port = lua.GetTop() >= 2 ? (int)lua.L_CheckInteger(2) : 8080;
 
             Kernel.commandHandler.Execute("http " + root + " " + port);
             lua.PushBoolean(true); return 1;
@@ -612,10 +612,10 @@ namespace Shinx
             string displayName = lua.L_CheckString(2);
             string drawFn = lua.L_CheckString(3);
             string keyFn = lua.GetTop() >= 4 && lua.Type(4) == LuaType.LUA_TSTRING ? lua.L_CheckString(4) : "";
-            int x = lua.GetTop() >= 5 ? lua.L_CheckInteger(5) : 80;
-            int y = lua.GetTop() >= 6 ? lua.L_CheckInteger(6) : 60;
-            int w = lua.GetTop() >= 7 ? lua.L_CheckInteger(7) : 400;
-            int h = lua.GetTop() >= 8 ? lua.L_CheckInteger(8) : 300;
+            int x = lua.GetTop() >= 5 ? (int)lua.L_CheckInteger(5) : 80;
+            int y = lua.GetTop() >= 6 ? (int)lua.L_CheckInteger(6) : 60;
+            int w = lua.GetTop() >= 7 ? (int)lua.L_CheckInteger(7) : 400;
+            int h = lua.GetTop() >= 8 ? (int)lua.L_CheckInteger(8) : 300;
 
             var existing = AppManager.GetApp(id);
             if (existing != null) AppManager.Apps.Remove(existing);
@@ -631,10 +631,10 @@ namespace Shinx
         private static int L_GuiRectFill(ILuaState lua)
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
-            int rx = _guiX + 1 + lua.L_CheckInteger(1);
-            int ry = _guiY + 20 + lua.L_CheckInteger(2);
-            int rw = lua.L_CheckInteger(3);
-            int rh = lua.L_CheckInteger(4);
+            int rx = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int ry = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int rw = (int)lua.L_CheckInteger(3);
+            int rh = (int)lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
             _guiCanvas.DrawFilledRectangle(c, rx, ry, rw, rh);
@@ -643,10 +643,10 @@ namespace Shinx
         private static int L_GuiRect(ILuaState lua)
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
-            int rx = _guiX + 1 + lua.L_CheckInteger(1);
-            int ry = _guiY + 20 + lua.L_CheckInteger(2);
-            int rw = lua.L_CheckInteger(3);
-            int rh = lua.L_CheckInteger(4);
+            int rx = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int ry = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int rw = (int)lua.L_CheckInteger(3);
+            int rh = (int)lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
             _guiCanvas.DrawRectangle(c, rx, ry, rw, rh);
@@ -655,10 +655,10 @@ namespace Shinx
         private static int L_GuiLine(ILuaState lua)
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
-            int x1 = _guiX + 1 + lua.L_CheckInteger(1);
-            int y1 = _guiY + 20 + lua.L_CheckInteger(2);
-            int x2 = _guiX + 1 + lua.L_CheckInteger(3);
-            int y2 = _guiY + 20 + lua.L_CheckInteger(4);
+            int x1 = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int y1 = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int x2 = _guiX + 1 + (int)lua.L_CheckInteger(3);
+            int y2 = _guiY + 20 + (int)lua.L_CheckInteger(4);
             string cs = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
             _guiCanvas.DrawLine(c, x1, y1, x2, y2);
@@ -678,10 +678,10 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) { lua.PushBoolean(false); return 1; }
 
-            int bx = _guiX + 1 + lua.L_CheckInteger(1);
-            int by = _guiY + 20 + lua.L_CheckInteger(2);
-            int bw = lua.L_CheckInteger(3);
-            int bh = lua.L_CheckInteger(4);
+            int bx = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int by = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int bw = (int)lua.L_CheckInteger(3);
+            int bh = (int)lua.L_CheckInteger(4);
             string label = lua.L_CheckString(5);
             string bgCs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "gray";
             string borderCs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "white";
@@ -713,8 +713,8 @@ namespace Shinx
         private static int L_GuiLabel(ILuaState lua)
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
-            int tx = _guiX + 1 + lua.L_CheckInteger(1);
-            int ty = _guiY + 20 + lua.L_CheckInteger(2);
+            int tx = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int ty = _guiY + 20 + (int)lua.L_CheckInteger(2);
             string text = lua.L_CheckString(3);
             string cs = lua.GetTop() >= 4 ? lua.L_CheckString(4) : "white";
             System.Drawing.Color c; if (!TryParseGuiColor(cs, out c)) c = System.Drawing.Color.White;
@@ -725,10 +725,10 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
 
-            int bx = _guiX + 1 + lua.L_CheckInteger(1);
-            int by = _guiY + 20 + lua.L_CheckInteger(2);
-            int bw = lua.L_CheckInteger(3);
-            int bh = lua.L_CheckInteger(4);
+            int bx = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int by = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int bw = (int)lua.L_CheckInteger(3);
+            int bh = (int)lua.L_CheckInteger(4);
             string text = lua.L_CheckString(5);
             string tcs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "white";
             string bcs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "black";
@@ -765,9 +765,9 @@ namespace Shinx
             if (!_inGuiDraw || _guiCanvas == null) { lua.PushString(""); return 1; }
 
             string id = lua.L_CheckString(1);
-            int ix = _guiX + 1 + lua.L_CheckInteger(2);
-            int iy = _guiY + 20 + lua.L_CheckInteger(3);
-            int iw = lua.L_CheckInteger(4);
+            int ix = _guiX + 1 + (int)lua.L_CheckInteger(2);
+            int iy = _guiY + 20 + (int)lua.L_CheckInteger(3);
+            int iw = (int)lua.L_CheckInteger(4);
             string placeholder = lua.GetTop() >= 5 ? lua.L_CheckString(5) : "";
             string bgCs = lua.GetTop() >= 6 ? lua.L_CheckString(6) : "black";
             string borderCs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "gray";
@@ -818,8 +818,8 @@ namespace Shinx
             if (!_inGuiDraw || _guiCanvas == null) { lua.PushBoolean(false); return 1; }
 
             string id = lua.L_CheckString(1);
-            int cx = _guiX + 1 + lua.L_CheckInteger(2);
-            int cy = _guiY + 20 + lua.L_CheckInteger(3);
+            int cx = _guiX + 1 + (int)lua.L_CheckInteger(2);
+            int cy = _guiY + 20 + (int)lua.L_CheckInteger(3);
             string label = lua.L_CheckString(4);
 
             if (!_checkboxState.ContainsKey(id)) _checkboxState[id] = false;
@@ -851,10 +851,10 @@ namespace Shinx
         {
             if (!_inGuiDraw || _guiCanvas == null) return 0;
 
-            int px = _guiX + 1 + lua.L_CheckInteger(1);
-            int py = _guiY + 20 + lua.L_CheckInteger(2);
-            int pw = lua.L_CheckInteger(3);
-            int ph = lua.L_CheckInteger(4);
+            int px = _guiX + 1 + (int)lua.L_CheckInteger(1);
+            int py = _guiY + 20 + (int)lua.L_CheckInteger(2);
+            int pw = (int)lua.L_CheckInteger(3);
+            int ph = (int)lua.L_CheckInteger(4);
             double val = lua.L_CheckNumber(5);
             double max = lua.L_CheckNumber(6);
             string cs = lua.GetTop() >= 7 ? lua.L_CheckString(7) : "green";

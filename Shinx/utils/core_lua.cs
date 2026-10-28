@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using UniLua;
+using Cosmos.Executable.Lua;
 namespace Shinx.Commands
 {
     public class core_lua : ICommand

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using UniLua;
+using Cosmos.Executable.Lua;
 using Shinx.Commands;
 
 namespace Shinx

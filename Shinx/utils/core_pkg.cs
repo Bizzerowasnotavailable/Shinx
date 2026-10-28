@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using UniLua;
+using Cosmos.Executable.Lua;
 
 namespace Shinx.Commands
 {

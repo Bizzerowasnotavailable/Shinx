@@ -25,6 +25,7 @@
   <ItemGroup>
     <PackageReference Include="Cosmos.Kernel" Version="3.0.95" />
     <PackageReference Include="Cosmos.Kernel.System" Version="3.0.95" />
+    <PackageReference Include="Cosmos.Executable.Lua" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@ using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
 using System;
 using System.Drawing;
-using UniLua;
+using Cosmos.Executable.Lua;
 
 namespace Shinx.GUI
 {
