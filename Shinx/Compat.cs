@@ -1,6 +1,6 @@
 using System;
 using Sys = Cosmos.Kernel.System;
-using Cosmos.Kernel.System.Timer;
+using Cosmos.Kernel.System.Timers;
 
 namespace Shinx
 {

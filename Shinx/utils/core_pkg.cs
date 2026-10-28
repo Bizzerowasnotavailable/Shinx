@@ -300,7 +300,7 @@ namespace Shinx.Commands
                             if (resp.Count > 0) break;
                         }
                         catch { }
-                        Cosmos.Kernel.System.Timer.TimerManager.Wait(500);
+                        Cosmos.Kernel.System.Timers.TimerManager.Wait(500);
                         retries--;
                     }
 

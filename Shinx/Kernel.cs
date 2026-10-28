@@ -5,13 +5,11 @@ using Shinx.Commands;
 using System;
 using System.IO;
 using System.Reflection;
-using System.IO;
 using Cosmos.Kernel.System.Storage;
-using Cosmos.Kernel.System.Vfs;
-using Cosmos.Kernel.System.Filesystems.Fat;
+using Cosmos.Kernel.System.FileSystem;
+using Cosmos.Kernel.System.FileSystem.Fat;
 using UniLua;
 using Sys = Cosmos.Kernel.System;
-using Cosmos.Kernel.HAL.Vfs;
 
 
 namespace Shinx
@@ -22,13 +20,18 @@ namespace Shinx
 
         protected override void BeforeRun()
         {
-            FatFilesystemType fat = new();
-
-            VfsManager.RegisterFilesystem("fat", fat);
-
-            if (VfsManager.TryMount("fat", "0", MountFlags.None, "/", out VfsManager.VfsMount? mount))
+            try
             {
-                Console.WriteLine("Mounted " + mount.Name + " partition " + mount.Source + " at " + mount.MountPoint);
+                var fat = new FatFileSystemType();
+                VfsManager.RegisterFileSystem("fat", fat);
+                if (VfsManager.TryMount("fat", "0", MountFlags.None, "/", out VfsMount mount))
+                {
+                    Console.WriteLine("Mounted " + mount.Name + " partition " + mount.Source + " at " + mount.MountPoint);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("FS mount error: " + e.Message);
             }
 
             FSManager.Init();

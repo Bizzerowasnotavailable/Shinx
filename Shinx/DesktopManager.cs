@@ -1,8 +1,8 @@
 using System;
 using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
-using Cosmos.Kernel.System.Mouse;
-using Cosmos.Kernel.System.Timer;
+using Cosmos.Kernel.System.Input;
+using Cosmos.Kernel.System.Timers;
 using System.Drawing;
 
 namespace Shinx
@@ -85,7 +85,6 @@ namespace Shinx
                     if (frameCount > 1000) { GC.Collect(); frameCount = 0; }
                 }
 
-                vbe.Disable();
                 vbe = null;
                 System.Console.Clear();
             }

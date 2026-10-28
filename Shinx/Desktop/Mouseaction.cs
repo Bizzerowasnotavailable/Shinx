@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Sys = Cosmos.Kernel.System;
 using System.Drawing;
 using Cosmos.Kernel.System.Graphics;
-using CMouse = Cosmos.Kernel.System.Mouse.MouseManager;
+using CMouse = Cosmos.Kernel.System.Input.MouseManager;
 
 namespace Shinx.GUI
 {

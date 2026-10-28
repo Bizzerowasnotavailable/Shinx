@@ -1,6 +1,6 @@
 ﻿using Cosmos.Kernel.System;
 using Cosmos.Kernel.System.Graphics;
-using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Input;
 using System.Drawing;
 
 namespace Shinx.GUI

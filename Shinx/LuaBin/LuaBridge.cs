@@ -8,7 +8,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using UniLua;
-using Cosmos.Kernel.System.Mouse;
+using Cosmos.Kernel.System.Input;
 
 namespace Shinx
 {

@@ -1,12 +1,7 @@
-﻿using Cosmos.Kernel.System.Network;
-using Cosmos.Kernel.System.Network.Config;
-using Cosmos.Kernel.System.Network.IPv4;
-using Cosmos.Kernel.System.Network.IPv4.UDP.DHCP;
-using Cosmos.Kernel.System.Network.IPv4.UDP.DNS;
-using Cosmos.Kernel.System.Timer;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using Cosmos.Kernel.System.Network;
+using Cosmos.Kernel.System.Timers;
 
 namespace Shinx
 {
@@ -17,24 +12,19 @@ namespace Shinx
         public static string CurrentMask { get; private set; } = "0.0.0.0";
         public static string CurrentGateway { get; private set; } = "0.0.0.0";
         public static string Mode { get; private set; } = "none";
-        public static string DNSServer { get; private set; } = "8.8.8.8";
+        public static string DNSServer { get; private set; } = "1.1.1.1";
 
         private static readonly string configFile = "/sys/network.txt";
 
         public static void Init()
         {
-            var device = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
-
-            if (device == null)
+            if (Cosmos.Kernel.System.Network.NetworkManager.DeviceCount == 0)
             {
                 Console.WriteLine("[net] No network devices found.");
                 return;
             }
 
             LoadConfig();
-
-            // Initialize the network stack before using DHCP/DNS
-            Cosmos.Kernel.System.Network.NetworkStack.Initialize();
 
             if (Mode == "static")
             {
@@ -55,33 +45,24 @@ namespace Shinx
             try
             {
                 Console.WriteLine("[net] Discovering DHCP server...");
-
-                using (var xClient = new DHCPClient())
+                DhcpClient dhcpClient = new DhcpClient();
+                if (dhcpClient.SendDiscoverPacket() != -1)
                 {
-                    xClient.SendDiscoverPacket();
+                    var cfg = Cosmos.Kernel.System.Network.NetworkManager.Primary.IPConfig;
+                    if (cfg != null)
+                    {
+                        CurrentIP = cfg.Address.ToString();
+                        CurrentMask = cfg.SubnetMask.ToString();
+                        CurrentGateway = cfg.DefaultGateway.ToString();
+                        IsConnected = true;
+                        Mode = "dhcp";
+                        SaveConfig();
+                        Console.WriteLine($"[net] Success! IP: {CurrentIP}");
+                        return;
+                    }
                 }
-
-                int maxAttempts = 20;
-                var netDevice = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
-                while (Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(netDevice) == null && maxAttempts > 0)
-                {
-                    TimerManager.Wait(500);
-                    maxAttempts--;
-                }
-
-                if (Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(netDevice) != null)
-                {
-                    UpdateStatus();
-                    IsConnected = true;
-                    Mode = "dhcp";
-                    SaveConfig();
-                    Console.WriteLine($"[net] Success! IP: {CurrentIP}");
-                }
-                else
-                {
-                    Console.WriteLine("[net] DHCP Timeout (No response from router).");
-                    IsConnected = false;
-                }
+                Console.WriteLine("[net] DHCP Timeout (No response from router).");
+                IsConnected = false;
             }
             catch (Exception e)
             {
@@ -94,9 +75,25 @@ namespace Shinx
         {
             try
             {
-                var nic = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
+                if (Cosmos.Kernel.System.Network.NetworkManager.DeviceCount == 0)
+                {
+                    Console.WriteLine("[net] No network device.");
+                    return;
+                }
 
-                IPConfig.Enable(nic, Address.Parse(ip), Address.Parse(mask), Address.Parse(gateway));
+                var a1 = System.Net.IPAddress.Parse(ip);
+                var b1 = a1.GetAddressBytes();
+                var a2 = System.Net.IPAddress.Parse(mask);
+                var b2 = a2.GetAddressBytes();
+                var a3 = System.Net.IPAddress.Parse(gateway);
+                var b3 = a3.GetAddressBytes();
+                if (!IPConfig.Enable(new Address4(b1[0], b1[1], b1[2], b1[3]),
+                    new Address4(b2[0], b2[1], b2[2], b2[3]),
+                    new Address4(b3[0], b3[1], b3[2], b3[3])))
+                {
+                    Console.WriteLine("[net] Failed to enable IP config.");
+                    return;
+                }
 
                 CurrentIP = ip;
                 CurrentMask = mask;
@@ -134,7 +131,8 @@ namespace Shinx
         {
             try
             {
-                Address.Parse(dns);
+                var parts = dns.Split('.');
+                DnsConfig.Add(new Address4(byte.Parse(parts[0]), byte.Parse(parts[1]), byte.Parse(parts[2]), byte.Parse(parts[3])));
                 DNSServer = dns;
                 SaveConfig();
                 Console.WriteLine($"[net] DNS set to {dns}");
@@ -150,13 +148,19 @@ namespace Shinx
 
             try
             {
-                using (var dnsClient = new DnsClient())
+                try
                 {
-                    dnsClient.Connect(Address.Parse(DNSServer));
-                    dnsClient.SendAsk(norm);
-                    Address result = dnsClient.Receive();
-                    return result?.ToString();
+                    var addrs = System.Net.Dns.GetHostAddresses(norm);
+                    if (addrs.Length > 0) return addrs[0].ToString();
                 }
+                catch { }
+
+                var dnsClient = new DnsClient();
+                var dp = DNSServer.Split('.');
+                dnsClient.Connect(new Address4(byte.Parse(dp[0]), byte.Parse(dp[1]), byte.Parse(dp[2]), byte.Parse(dp[3])));
+                dnsClient.SendQuery(norm);
+                var result = dnsClient.Receive(5000);
+                return result?.ToString();
             }
             catch (Exception e)
             {
@@ -172,31 +176,26 @@ namespace Shinx
 
             try
             {
-                using (var dnsClient = new DnsClient())
+                try
                 {
-                    dnsClient.Connect(Address.Parse(DNSServer));
-                    dnsClient.SendAsk(norm);
-                    List<Address> result = dnsClient.ReceiveAll();
-                    if (result == null) return null;
-                    var addresses = new List<string>();
-                    foreach (var addr in result)
-                        addresses.Add(addr.ToString());
-                    return addresses;
+                    var addrs = System.Net.Dns.GetHostAddresses(norm);
+                    if (addrs != null && addrs.Length > 0)
+                    {
+                        var addresses = new List<string>();
+                        foreach (var addr in addrs)
+                            addresses.Add(addr.ToString());
+                        return addresses;
+                    }
                 }
+                catch { }
+
+                return null;
             }
             catch (Exception e)
             {
                 Console.WriteLine("[dns] Failed: " + e.Message);
                 return null;
             }
-        }
-
-        private static void UpdateStatus()
-        {
-            var device = Cosmos.Kernel.System.Network.NetworkManager.PrimaryDevice;
-            var config = Cosmos.Kernel.System.Network.Config.NetworkConfigManager.Get(device);
-            if (config != null)
-                CurrentIP = config.IPAddress.ToString();
         }
 
         private static void SaveConfig()
