@@ -11,40 +11,38 @@ namespace Shinx.Commands
 
         public peppe()
         {
-            commands = new Dictionary<string, ICommand>
-            {
-                { "echo", new core_echo() },
-                { "lico", new core_lico() },
-                { "cp", new core_cp() },
-                { "clear", new core_clear() },
-                { "ls", new core_ls() },
-                { "mv", new core_mv() },
-                { "mkdir", new core_mkdir() },
-                { "cat", new core_cat() },
-                { "cd", new core_cd() },
-                { "edit", new core_edit() },
-                { "rm", new core_rm() },
-                { "sha256sum", new core_sha256() },
-                { "useradd", new core_useradd() },
-                { "userdel", new core_userdel() },
-                { "passwd", new core_passwd() },
-                { "whoami", new core_whoami() },
-                { "exit", new core_exit() },
-                { "quit", new core_exit() },
-                { "su", new core_su() },
-                { "groupadd", new core_groupadd() },
-                { "groupdel", new core_groupdel() },
-                { "groupmod", new core_groupmod() },
-                { "groups", new core_groups() },
-                { "chown", new core_chown() },
-                { "chgrp", new core_chgrp() },
-                { "lua", new core_lua() },
-                { "desktop", new core_desktop() },
-                { "net", new core_network() },
-                
-                { "http", new core_http() },
-                { "lpkg", new core_pkg() }
-            };
+            commands = new Dictionary<string, ICommand>();
+
+            RegisterCommand("echo", new core_echo(), "display a message in the terminal");
+            RegisterCommand("help", new core_help(), "list commands in the editor or describe one command");
+            RegisterCommand("clear", new core_clear(), "clear the terminal");
+            RegisterCommand("ls", new core_ls(), "list files in a directory");
+            RegisterCommand("cp", new core_cp(), "copy files");
+            RegisterCommand("mv", new core_mv(), "move files");
+            RegisterCommand("mkdir", new core_mkdir(), "make a directory");
+            RegisterCommand("cat", new core_cat(), "show the contents of a file");
+            RegisterCommand("cd", new core_cd(), "change directory");
+            RegisterCommand("edit", new core_edit(), "basic text editor");
+            RegisterCommand("rm", new core_rm(), "delete a file or directory");
+            RegisterCommand("sha256sum", new core_sha256(), "calculate the sha256 hash of a string");
+            RegisterCommand("useradd", new core_useradd(), "add a new user");
+            RegisterCommand("userdel", new core_userdel(), "delete a user");
+            RegisterCommand("passwd", new core_passwd(), "change a user's password");
+            RegisterCommand("whoami", new core_whoami(), "print the current username");
+            RegisterCommand("exit", new core_exit(), "close the terminal window (logout in the console)");
+            RegisterCommand("quit", new core_exit(), "alias for exit");
+            RegisterCommand("su", new core_su(), "switch user");
+            RegisterCommand("groupadd", new core_groupadd(), "create a new group");
+            RegisterCommand("groupdel", new core_groupdel(), "delete a group");
+            RegisterCommand("groupmod", new core_groupmod(), "add or remove a user from a group");
+            RegisterCommand("groups", new core_groups(), "list groups for a user");
+            RegisterCommand("chown", new core_chown(), "change the owner of a file or directory");
+            RegisterCommand("chgrp", new core_chgrp(), "change the group of a file or directory");
+            RegisterCommand("lua", new core_lua(), "run the Lua interpreter");
+            RegisterCommand("http", new core_http(), "start the HTTP server");
+            RegisterCommand("desktop", new core_desktop(), "launch the graphical environment");
+            RegisterCommand("net", new core_network(), "manage network configuration");
+            RegisterCommand("lpkg", new core_pkg(), "package manager");
         }
 
         public void Execute(string input)
