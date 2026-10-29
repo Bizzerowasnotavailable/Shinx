@@ -23,7 +23,8 @@ namespace Shinx.Commands
             Console.WriteLine("userdel: delete user");
             Console.WriteLine("passwd: change user password");
             Console.WriteLine("whoami: prints current user's username");
-            Console.WriteLine("exit: logout");
+            Console.WriteLine("exit: close the terminal window (logout in the console)");
+            Console.WriteLine("quit: alias for exit");
             Console.WriteLine("su: switch user");
             Console.WriteLine("groupadd: create a new group");
             Console.WriteLine("groupdel: delete a group");

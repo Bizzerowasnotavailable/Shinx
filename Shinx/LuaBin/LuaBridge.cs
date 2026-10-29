@@ -134,7 +134,11 @@ namespace Shinx
         }
         private static int L_WriteLine(ILuaState lua) { Console.WriteLine(lua.L_ToString(1)); return 0; }
         private static int L_Write(ILuaState lua) { Console.Write(lua.L_ToString(1)); return 0; }
-        private static int L_Clear(ILuaState lua) { Console.Clear(); return 0; }
+        private static int L_Clear(ILuaState lua)
+        {
+            ConsoleUi.Clear();
+            return 0;
+        }
         private static int L_Color(ILuaState lua)
         {
             string fg = lua.L_CheckString(1);

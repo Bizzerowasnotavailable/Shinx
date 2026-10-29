@@ -85,11 +85,13 @@ namespace Shinx
                     if (frameCount > 1000) { GC.Collect(); frameCount = 0; }
                 }
 
+                Shinx.GUI.Terminal.Shutdown();
                 vbe = null;
                 System.Console.Clear();
             }
             catch (Exception e)
             {
+                try { Shinx.GUI.Terminal.Shutdown(); } catch { }
                 vbe = null;
                 System.Console.WriteLine("GUI Panic: " + e.Message);
             }

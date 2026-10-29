@@ -94,113 +94,56 @@ namespace Shinx
 
         protected override void Run()
         {
-            Console.Write(UserManager.currentUser + "@" + Shell.currentDirectory + "> ");
-            string input = ReadLine();
-            if (!string.IsNullOrEmpty(input))
-            {
-                Shell.history.Add(input);
-                commandHandler.Execute(input);
-            }
+            Console.Write(Shell.Prompt());
+            Shell.Execute(ReadLine());
         }
-
-        private int historyIndex = -1;
 
         private string ReadLine()
         {
-            string input = "";
-            int cursorPos = 0;
-            historyIndex = Shell.history.Count;
+            LineEditor editor = new LineEditor(Shell.history);
 
             while (true)
             {
                 ConsoleKeyInfo key = Console.ReadKey(true);
+                LineAction action = editor.Handle(key);
 
-                switch (key.Key)
+                switch (action)
                 {
-                    case ConsoleKey.Enter:
+                    case LineAction.Submit:
                         Console.WriteLine();
-                        return input;
+                        return editor.Text;
 
-                    case ConsoleKey.Backspace:
-                        if (cursorPos > 0)
-                        {
-                            input = input.Substring(0, cursorPos - 1) + input.Substring(cursorPos);
-                            cursorPos--;
-                            RedrawInput(input, cursorPos);
-                        }
-                        break;
-
-                    case ConsoleKey.UpArrow:
-                        if (historyIndex > 0)
-                        {
-                            historyIndex--;
-                            input = Shell.history[historyIndex];
-                            cursorPos = input.Length;
-                            RedrawInput(input, cursorPos);
-                        }
-                        break;
-
-                    case ConsoleKey.DownArrow:
-                        if (historyIndex < Shell.history.Count - 1)
-                        {
-                            historyIndex++;
-                            input = Shell.history[historyIndex];
-                            cursorPos = input.Length;
-                            RedrawInput(input, cursorPos);
-                        }
-                        else
-                        {
-                            historyIndex = Shell.history.Count;
-                            input = "";
-                            cursorPos = 0;
-                            RedrawInput(input, cursorPos);
-                        }
-                        break;
-
-                    case ConsoleKey.LeftArrow:
-                        if (cursorPos > 0)
-                        {
-                            cursorPos--;
-                            Console.CursorLeft = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length + cursorPos;
-                        }
-                        break;
-
-                    case ConsoleKey.RightArrow:
-                        if (cursorPos < input.Length)
-                        {
-                            cursorPos++;
-                            Console.CursorLeft = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length + cursorPos;
-                        }
-                        break;
-
-                    case ConsoleKey.C when key.Modifiers == ConsoleModifiers.Control:
-                        input = "";
-                        cursorPos = 0;
-                        historyIndex = Shell.history.Count;
+                    case LineAction.Cancel:
                         Console.WriteLine("^C");
-                        Console.Write(UserManager.currentUser + "@" + Shell.currentDirectory + "> ");
+                        BeginInputLine(editor);
+                        break;
+
+                    case LineAction.ClearScreen:
+                        Console.Clear();
+                        BeginInputLine(editor);
                         break;
 
                     default:
-                        if (key.KeyChar != '\0')
-                        {
-                            input = input.Substring(0, cursorPos) + key.KeyChar + input.Substring(cursorPos);
-                            cursorPos++;
-                            RedrawInput(input, cursorPos);
-                        }
+                        RedrawInput(editor);
                         break;
                 }
             }
         }
 
-        private void RedrawInput(string input, int cursorPos)
+        private void BeginInputLine(LineEditor editor)
         {
-            int promptLen = (UserManager.currentUser + "@" + Shell.currentDirectory + "> ").Length;
+            Console.Write(Shell.Prompt());
+            RedrawInput(editor);
+        }
+
+        private void RedrawInput(LineEditor editor)
+        {
+            int promptLen = Shell.Prompt().Length;
             Console.CursorLeft = promptLen;
             Console.Write(new string(' ', Console.WindowWidth - promptLen - 1));
             Console.CursorLeft = promptLen;
-            Console.Write(input);
-            Console.CursorLeft = promptLen + cursorPos;
+            Console.Write(editor.Text);
+            Console.CursorLeft = promptLen + editor.Cursor;
         }
 
         private string ReadPassword()
