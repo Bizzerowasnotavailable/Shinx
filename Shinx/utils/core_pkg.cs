@@ -1,8 +1,9 @@
+using Cosmos.Network.Http;
 using Shinx.GUI;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 using Cosmos.Executable.Lua;
 
@@ -10,8 +11,7 @@ namespace Shinx.Commands
 {
     internal class core_pkg : ICommand
     {
-        private const string RepoName = "repo.izzoserver.top";
-        private const int RepoPort = 80;
+        private const string RepoUrl = "https://cristiandis.github.io/shinx-repo";
         private const string BinDir = "/bin/";
         private const string ManifestPath = "/bin/lpkg.txt";
 
@@ -249,83 +249,38 @@ namespace Shinx.Commands
         }
         private byte[] HttpGetRaw(string path)
         {
+            string url = RepoUrl + path;
+
             try
             {
-                using (var client = new TcpClient())
+                using (var client = new HttpClient
                 {
-                    var ips = NetworkManager.ResolveAll(RepoName);
-                    if (ips == null || ips.Count == 0)
-                    {
-                        Console.WriteLine("lpkg: failed to resolve " + RepoName);
-                        return null;
-                    }
+                    Timeout = TimeSpan.FromSeconds(30),
+                    SslProtocols = SslProtocols.None,
+                })
+                {
+                    client.DefaultRequestHeaders.Add("User-Agent", "Shinx-lpkg/1.0");
 
-                    bool connected = false;
-                    foreach (var ip in ips)
+                    using (HttpResponseMessage response = client.Get(url, HttpCompletionOption.ResponseContentRead))
                     {
-                        try
+                        int status = (int)response.StatusCode;
+
+                        if (status == 404)
                         {
-                            client.Connect(ip, RepoPort);
-                            connected = true;
-                            break;
+                            Console.WriteLine("lpkg: not found on server");
+                            return null;
                         }
-                        catch { }
-                    }
 
-                    if (!connected)
-                    {
-                        Console.WriteLine("lpkg: failed to connect to " + RepoName);
-                        return null;
-                    }
-                    NetworkStream stream = client.GetStream();
-
-                    string req =
-                        "GET " + path + " HTTP/1.0\r\n" +
-                        "Host: " + RepoName + "\r\n" +
-                        "Connection: close\r\n\r\n";
-
-                    byte[] reqBytes = Encoding.ASCII.GetBytes(req);
-                    stream.Write(reqBytes, 0, reqBytes.Length);
-
-                    var resp = new List<byte>();
-                    byte[] buf = new byte[1024];
-                    int read;
-                    int retries = 20;
-                    while (retries > 0)
-                    {
-                        try
+                        if (status < 200 || status >= 300)
                         {
-                            while ((read = stream.Read(buf, 0, buf.Length)) > 0)
-                                for (int i = 0; i < read; i++) resp.Add(buf[i]);
-                            if (resp.Count > 0) break;
+                            Console.WriteLine("lpkg: HTTP " + status + " " + response.ReasonPhrase);
+                            return null;
                         }
-                        catch { }
-                        Cosmos.Kernel.System.Timers.TimerManager.Wait(500);
-                        retries--;
+
+                        return response.Content == null
+                            ? new byte[0]
+                            : response.Content.ReadAsByteArray();
                     }
-
-                    stream.Close();
-
-                    byte[] raw = resp.ToArray();
-
-                    for (int i = 0; i < raw.Length - 3; i++)
-                    {
-                        if (raw[i] == '\r' && raw[i + 1] == '\n' && raw[i + 2] == '\r' && raw[i + 3] == '\n')
-                        {
-                            string header = Encoding.ASCII.GetString(raw, 0, i);
-                            if (header.Contains(" 404 "))
-                            {
-                                Console.WriteLine("lpkg: not found on server");
-                                return null;
-                            }
-
-                            byte[] body = new byte[raw.Length - (i + 4)];
-                            Array.Copy(raw, i + 4, body, 0, body.Length);
-                            return body;
-                        }
-                    }
-
-                    return raw;
                 }
             }
             catch (Exception e)

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
+using Cosmos.Network.Http;
 
 namespace Shinx.Commands
 {
@@ -22,6 +21,8 @@ namespace Shinx.Commands
             { ".lua",  "text/plain" },
         };
 
+        private bool _stopRequested;
+
         public void Execute(string[] args, HashSet<char> parameters)
         {
             if (DesktopManager.Running)
@@ -36,158 +37,234 @@ namespace Shinx.Commands
                 return;
             }
 
+            if (args.Length > 2)
+            {
+                Console.WriteLine("usage: http [root] [port]");
+                return;
+            }
+
             string rootFolder = args.Length > 0
-                ? (args[0].StartsWith("/") ? args[0] : Shell.currentDirectory + args[0])
+                ? ResolvePath(args[0])
                 : Shell.currentDirectory;
 
-            int port = args.Length > 1 ? int.Parse(args[1]) : 8080;
+            int port = 8080;
+            if (args.Length > 1 && !int.TryParse(args[1], out port))
+            {
+                Console.WriteLine("http: invalid port");
+                return;
+            }
 
             string myIp = NetworkManager.CurrentIP;
             Console.WriteLine("http: serving " + rootFolder);
             Console.WriteLine("http: http://" + myIp + ":" + port);
             Console.WriteLine("http: navigate to http://" + myIp + ":" + port + "/stop to stop");
 
+            _stopRequested = false;
+
+            var listener = new HttpListener("http", port);
+
             try
             {
-                var listener = new TcpListener(IPAddress.Any, port);
                 listener.Start();
 
-                while (true)
+                while (!_stopRequested && listener.IsListening)
                 {
-                    TcpClient client;
-                    try { client = listener.AcceptTcpClient(); }
-                    catch
+                    HttpListenerContext context;
+                    try
+                    {
+                        context = listener.GetContext();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (_stopRequested)
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine("http: client error: " + e.Message);
+                        continue;
+                    }
+
+                    if (context == null)
+                    {
+                        break;
+                    }
+
+                    try
+                    {
+                        HandleContext(context, rootFolder);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("http: client error: " + e.Message);
+                    }
+
+                    if (_stopRequested)
                     {
                         try { listener.Stop(); } catch { }
-                        listener = new TcpListener(IPAddress.Any, port);
-                        listener.Start();
-                        continue;
+                        break;
                     }
-                    HandleClient(client, rootFolder);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("http: " + e.Message);
+                if (!_stopRequested)
+                {
+                    Console.WriteLine("http: " + e.Message);
+                }
+            }
+            finally
+            {
+                try { listener.Close(); } catch { }
             }
         }
 
-        private void HandleClient(TcpClient client, string rootFolder)
+        private void HandleContext(HttpListenerContext context, string rootFolder)
         {
+            HttpListenerRequest request = context.Request;
+            string urlPath = request.RawUrl ?? "/";
+            int question = urlPath.IndexOf('?');
+            if (question >= 0)
+            {
+                urlPath = urlPath.Substring(0, question);
+            }
+
+            Console.WriteLine("http: " + request.HttpMethod + " " + urlPath);
+
+            FileResponse result = BuildResponse(urlPath, rootFolder);
+            WriteResponse(context, result);
+        }
+
+        private FileResponse BuildResponse(string urlPath, string rootFolder)
+        {
+            if (urlPath.IndexOf('\\') >= 0 || HasParentSegment(urlPath))
+            {
+                return FileResponse.Html(403, "Forbidden", "<html><body><h1>403</h1></body></html>");
+            }
+
+            if (urlPath == "/favicon.ico")
+            {
+                return FileResponse.Html(404, "Not Found", string.Empty);
+            }
+
+            if (urlPath == "/stop")
+            {
+                _stopRequested = true;
+                return new FileResponse
+                {
+                    StatusCode = 200,
+                    ContentType = "text/html",
+                    Body = Encoding.UTF8.GetBytes("<h1>Stopped.</h1>"),
+                    CloseConnection = true,
+                };
+            }
+
+            string filePath = rootFolder.TrimEnd('/') + "/" + urlPath.TrimStart('/');
+
+            if (urlPath == "/" || Directory.Exists(filePath))
+            {
+                if (urlPath == "/")
+                {
+                    filePath = rootFolder;
+                }
+
+                string index = Path.Combine(filePath, "index.html");
+                if (File.Exists(index))
+                {
+                    filePath = index;
+                }
+                else
+                {
+                    string listing = BuildDirectoryListing(urlPath, filePath);
+                    return FileResponse.Html(200, "OK", listing);
+                }
+            }
+
+            if (!File.Exists(filePath))
+            {
+                return FileResponse.Html(404, "Not Found", "<html><body><h1>404</h1></body></html>");
+            }
+
+            if (!PermissionManager.CanAccess(filePath, UserManager.currentUser))
+            {
+                return FileResponse.Html(403, "Forbidden", "<html><body><h1>403</h1></body></html>");
+            }
+
+            string ext = "";
+            int dotIdx = filePath.LastIndexOf('.');
+            if (dotIdx >= 0)
+            {
+                ext = filePath.Substring(dotIdx).ToLower();
+            }
+
+            return new FileResponse
+            {
+                StatusCode = 200,
+                ContentType = MimeTypes.ContainsKey(ext) ? MimeTypes[ext] : "application/octet-stream",
+                Body = File.ReadAllBytes(filePath),
+            };
+        }
+
+        private static void WriteResponse(HttpListenerContext context, FileResponse result)
+        {
+            HttpListenerResponse response = context.Response;
             try
             {
-                NetworkStream stream = client.GetStream();
+                response.StatusCode = result.StatusCode;
+                response.ContentType = result.ContentType;
+                response.ContentLength64 = result.Body.Length;
+                response.KeepAlive = result.CloseConnection ? false : context.Request.KeepAlive;
 
-                while (true)
+                bool head = string.Equals(context.Request.HttpMethod, "HEAD", StringComparison.OrdinalIgnoreCase);
+                if (!head && result.Body.Length > 0)
                 {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    try { bytesRead = stream.Read(buffer, 0, buffer.Length); }
-                    catch { break; }
-                    if (bytesRead == 0) break;
-
-                    string rawRequest = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    string firstLine = rawRequest.Split('\n')[0].Trim();
-                    string[] parts = firstLine.Split(' ');
-                    if (parts.Length < 2) break;
-
-                    string method = parts[0];
-                    string urlPath = parts[1].Split('?')[0];
-
-                    bool keepAlive = rawRequest.Contains("Connection: keep-alive");
-
-                    Console.WriteLine("http: " + method + " " + urlPath);
-
-                    if (urlPath == "/favicon.ico")
-                    {
-                        SendResponse(stream, "404 Not Found", "text/plain", "", false);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    if (urlPath == "/stop")
-                    {
-                        SendResponse(stream, "200 OK", "text/html", "<h1>Stopped.</h1>", false);
-                        stream.Close();
-                        client.Close();
-                        throw new Exception("stop requested");
-                    }
-
-                    string filePath = rootFolder.TrimEnd('/') + "/" + urlPath.TrimStart('/');
-
-                    if (urlPath == "/" || Directory.Exists(filePath))
-                    {
-                        if (urlPath == "/") filePath = rootFolder;
-                        string index = Path.Combine(filePath, "index.html");
-                        if (File.Exists(index))
-                            filePath = index;
-                        else
-                        {
-                            string listing = BuildDirectoryListing(urlPath, filePath);
-                            SendResponse(stream, "200 OK", "text/html", listing, keepAlive);
-                            if (!keepAlive) break;
-                            continue;
-                        }
-                    }
-
-                    if (!File.Exists(filePath))
-                    {
-                        SendResponse(stream, "404 Not Found", "text/html",
-                            "<html><body><h1>404</h1></body></html>", keepAlive);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    if (!PermissionManager.CanAccess(filePath, UserManager.currentUser))
-                    {
-                        SendResponse(stream, "403 Forbidden", "text/html",
-                            "<html><body><h1>403</h1></body></html>", keepAlive);
-                        if (!keepAlive) break;
-                        continue;
-                    }
-
-                    string ext = "";
-                    int dotIdx = filePath.LastIndexOf('.');
-                    if (dotIdx >= 0) ext = filePath.Substring(dotIdx).ToLower();
-                    string mime = MimeTypes.ContainsKey(ext) ? MimeTypes[ext] : "application/octet-stream";
-
-                    byte[] fileData = File.ReadAllBytes(filePath);
-
-                    string responseHeader =
-                        "HTTP/1.1 200 OK\r\n" +
-                        "Content-Type: " + mime + "\r\n" +
-                        "Content-Length: " + fileData.Length + "\r\n" +
-                        "Connection: " + (keepAlive ? "keep-alive" : "close") + "\r\n\r\n";
-
-                    byte[] headerBytes = Encoding.ASCII.GetBytes(responseHeader);
-                    stream.Write(headerBytes, 0, headerBytes.Length);
-                    stream.Write(fileData, 0, fileData.Length);
-
-                    if (!keepAlive) break;
+                    response.OutputStream.Write(result.Body, 0, result.Body.Length);
                 }
 
-                stream.Close();
-                client.Close();
+                response.Close();
             }
             catch (Exception e)
             {
-                if (e.Message == "stop requested") throw;
-                Console.WriteLine("http: client error: " + e.Message);
-                try { client.Close(); } catch { }
+                Console.WriteLine("http: response error: " + e.Message);
+                try { response.Close(); } catch { }
             }
         }
 
-        private void SendResponse(NetworkStream stream, string status, string contentType, string body, bool keepAlive)
+        private static string ResolvePath(string path)
         {
-            byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
-            string header =
-                "HTTP/1.1 " + status + "\r\n" +
-                "Content-Type: " + contentType + "\r\n" +
-                "Content-Length: " + bodyBytes.Length + "\r\n" +
-                "Connection: " + (keepAlive ? "keep-alive" : "close") + "\r\n\r\n";
-            byte[] headerBytes = Encoding.ASCII.GetBytes(header);
-            stream.Write(headerBytes, 0, headerBytes.Length);
-            stream.Write(bodyBytes, 0, bodyBytes.Length);
+            if (path.StartsWith("/"))
+            {
+                return path;
+            }
+
+            return Shell.currentDirectory.TrimEnd('/') + "/" + path;
+        }
+
+        private static bool HasParentSegment(string path)
+        {
+            int start = 0;
+            while (start < path.Length)
+            {
+                int slash = path.IndexOf('/', start);
+                int end = slash < 0 ? path.Length : slash;
+                if (end - start == 2 && path[start] == '.' && path[start + 1] == '.')
+                {
+                    return true;
+                }
+
+                if (slash < 0)
+                {
+                    break;
+                }
+
+                start = slash + 1;
+            }
+
+            return false;
         }
 
         private string BuildDirectoryListing(string urlPath, string dirPath)
@@ -200,7 +277,9 @@ namespace Shinx.Commands
             sb.Append("<h1>Index of " + urlPath + "</h1><ul>");
 
             if (urlPath != "/")
+            {
                 sb.Append("<li><a href=\"..\">[..]</a></li>");
+            }
 
             try
             {
@@ -217,10 +296,31 @@ namespace Shinx.Commands
                     }
                 }
             }
-            catch { sb.Append("<li>error reading directory</li>"); }
+            catch
+            {
+                sb.Append("<li>error reading directory</li>");
+            }
 
             sb.Append("</ul></body></html>");
             return sb.ToString();
+        }
+
+        private sealed class FileResponse
+        {
+            public int StatusCode;
+            public string ContentType;
+            public byte[] Body;
+            public bool CloseConnection;
+
+            public static FileResponse Html(int statusCode, string contentType, string body)
+            {
+                return new FileResponse
+                {
+                    StatusCode = statusCode,
+                    ContentType = contentType,
+                    Body = Encoding.UTF8.GetBytes(body),
+                };
+            }
         }
     }
 }

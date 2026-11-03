@@ -39,7 +39,8 @@ namespace Shinx.Commands
             RegisterCommand("chown", new core_chown(), "change the owner of a file or directory");
             RegisterCommand("chgrp", new core_chgrp(), "change the group of a file or directory");
             RegisterCommand("lua", new core_lua(), "run the Lua interpreter");
-            RegisterCommand("http", new core_http(), "start the HTTP server");
+            RegisterCommand("http", new core_http(), "start the HTTP or HTTPS server");
+            RegisterCommand("wget", new core_wget(), "download a file over HTTP or HTTPS");
             RegisterCommand("desktop", new core_desktop(), "launch the graphical environment");
             RegisterCommand("net", new core_network(), "manage network configuration");
             RegisterCommand("lpkg", new core_pkg(), "package manager");
@@ -68,7 +69,7 @@ namespace Shinx.Commands
                         }
                         inParam = false;
                         break;
-                    case '-' when !inQuotes:
+                    case '-' when !inQuotes && current.Length == 0:
                         inParam = true;
                         break;
                     default:

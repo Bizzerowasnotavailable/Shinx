@@ -1,3 +1,4 @@
+using Cosmos.Network.Http;
 using Cosmos.Kernel.System.Graphics;
 using Shinx.Commands;
 using Shinx.GUI;
@@ -5,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 using Cosmos.Executable.Lua;
 using Cosmos.Kernel.System.Input;
@@ -437,44 +438,25 @@ namespace Shinx
             if (!NetworkManager.IsConnected) { lua.PushNil(); lua.PushString("not connected"); return 2; }
 
             string url = lua.L_CheckString(1);
-            if (!url.StartsWith("http://")) { lua.PushNil(); lua.PushString("only http:// is supported"); return 2; }
+            bool isHttp = url.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+            bool isHttps = url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+            if (!isHttp && !isHttps)
+            {
+                lua.PushNil(); lua.PushString("only http:// and https:// are supported"); return 2;
+            }
 
             try
             {
-                string hostAndPath = url.Substring(7);
-                int slash = hostAndPath.IndexOf('/');
-                string host = slash >= 0 ? hostAndPath.Substring(0, slash) : hostAndPath;
-                string path = slash >= 0 ? hostAndPath.Substring(slash) : "/";
-
-                string ip = NetworkManager.Resolve(host);
-                if (ip == null) { lua.PushNil(); lua.PushString("dns resolution failed"); return 2; }
-
-                using (var client = new TcpClient())
+                using (var client = new HttpClient
                 {
-                    client.Connect(ip, 80);
-                    NetworkStream stream = client.GetStream();
-
-                    string req =
-                        "GET " + path + " HTTP/1.0\r\n" +
-                        "Host: " + host + "\r\n" +
-                        "Connection: close\r\n\r\n";
-
-                    byte[] reqBytes = Encoding.ASCII.GetBytes(req);
-                    stream.Write(reqBytes, 0, reqBytes.Length);
-
-                    var resp = new List<byte>();
-                    byte[] buf = new byte[1024];
-                    int read;
-                    while ((read = stream.Read(buf, 0, buf.Length)) > 0)
-                        for (int i = 0; i < read; i++) resp.Add(buf[i]);
-
-                    stream.Close();
-
-                    string full = Encoding.ASCII.GetString(resp.ToArray());
-                    int headerEnd = full.IndexOf("\r\n\r\n");
-                    if (headerEnd < 0) headerEnd = full.IndexOf("\n\n");
-                    string body = headerEnd >= 0 ? full.Substring(headerEnd + 4) : full;
-
+                    Timeout = TimeSpan.FromSeconds(30),
+                    SslProtocols = SslProtocols.None,
+                })
+                using (HttpResponseMessage response = client.Get(url, HttpCompletionOption.ResponseContentRead))
+                {
+                    string body = response.Content == null
+                        ? string.Empty
+                        : response.Content.ReadAsString();
                     lua.PushString(body);
                     return 1;
                 }
