@@ -26,10 +26,19 @@ namespace Shinx.GUI
         private const int CharH = 16;
 
         private static readonly Color BgColor = Color.Black;
-        private static readonly Color FgColor = Color.White;
 
         private static readonly object _gate = new object();
-        private static readonly List<string> _buffer = new List<string>();
+
+        private struct Cell
+        {
+            public char Ch;
+            public ConsoleColor Fg;
+            public ConsoleColor Bg;
+        }
+
+        private static readonly List<List<Cell>> _buffer = new List<List<Cell>>();
+        private static ConsoleColor _currentFg = ConsoleColor.White;
+        private static ConsoleColor _currentBg = ConsoleColor.Black;
         private static readonly Queue<string> _pending = new Queue<string>();
         private static readonly LineEditor _editor = new LineEditor(Shell.history);
         private static readonly TerminalWriter _writer = new TerminalWriter();
@@ -67,22 +76,42 @@ namespace Shinx.GUI
 
             lock (_gate)
             {
-                if (_buffer.Count == 0) _buffer.Add("");
+                if (_buffer.Count == 0) _buffer.Add(new List<Cell>());
 
                 int rows = Rows;
                 int first = _buffer.Count > rows ? _buffer.Count - rows : 0;
                 int row = 0;
                 for (int i = first; i < _buffer.Count; i++, row++)
                 {
-                    string line = _buffer[i];
-                    if (line.Length > Cols) line = line.Substring(0, Cols);
-                    ASC16.DrawACSIIString(canvas, line, FgColor,
-                        (uint)(x + PadX),
-                        (uint)(y + TitleBarH + PadY + (row * CharH)));
+                    List<Cell> line = _buffer[i];
+                    int len = line.Count > Cols ? Cols : line.Count;
+                    int col = 0;
+                    int lineY = y + TitleBarH + PadY + (row * CharH);
+
+                    while (col < len)
+                    {
+                        ConsoleColor fg = line[col].Fg;
+                        ConsoleColor bg = line[col].Bg;
+                        int runStart = col;
+                        StringBuilder run = new StringBuilder();
+
+                        while (col < len && line[col].Fg == fg && line[col].Bg == bg)
+                        {
+                            run.Append(line[col].Ch);
+                            col++;
+                        }
+
+                        int runX = x + PadX + (runStart * CharW);
+                        if (bg != ConsoleColor.Black)
+                            canvas.DrawFilledRectangle(ConsoleToColor(bg), runX, lineY, run.Length * CharW, CharH);
+
+                        ASC16.DrawACSIIString(canvas, run.ToString(), ConsoleToColor(fg),
+                            (uint)runX, (uint)lineY);
+                    }
                 }
 
                 int lastRow = (_buffer.Count - 1) - first;
-                int lastLen = _buffer[_buffer.Count - 1].Length;
+                int lastLen = _buffer[_buffer.Count - 1].Count;
                 if (lastLen > Cols) lastLen = Cols;
 
                 int inputY = y + TitleBarH + PadY + (lastRow * CharH);
@@ -102,8 +131,11 @@ namespace Shinx.GUI
                 {
                     string visible = start > 0 ? input.Substring(start) : input;
                     if (visible.Length > room) visible = visible.Substring(0, room);
-                    ASC16.DrawACSIIString(canvas, visible, FgColor,
-                        (uint)(x + PadX + (lastLen * CharW)), (uint)inputY);
+                    int inputX = x + PadX + (lastLen * CharW);
+                    if (_currentBg != ConsoleColor.Black)
+                        canvas.DrawFilledRectangle(ConsoleToColor(_currentBg), inputX, inputY, visible.Length * CharW, CharH);
+                    ASC16.DrawACSIIString(canvas, visible, ConsoleToColor(_currentFg),
+                        (uint)inputX, (uint)inputY);
                 }
 
                 if (_cursorOn)
@@ -112,7 +144,7 @@ namespace Shinx.GUI
                     if (caret < 0) caret = 0;
                     if (caret > room - 1) caret = room - 1;
                     int caretX = x + PadX + ((lastLen + caret) * CharW);
-                    canvas.DrawFilledRectangle(FgColor, caretX, inputY + 2, 2, CharH - 4);
+                    canvas.DrawFilledRectangle(ConsoleToColor(_currentFg), caretX, inputY + 2, 2, CharH - 4);
                 }
             }
         }
@@ -188,7 +220,7 @@ namespace Shinx.GUI
             lock (_gate)
             {
                 _buffer.Clear();
-                _buffer.Add("");
+                _buffer.Add(new List<Cell>());
             }
         }
 
@@ -246,7 +278,7 @@ namespace Shinx.GUI
             lock (_gate)
             {
                 _buffer.Clear();
-                _buffer.Add("");
+                _buffer.Add(new List<Cell>());
                 _pending.Clear();
             }
             _editor.Reset();
@@ -337,6 +369,20 @@ namespace Shinx.GUI
             }
         }
 
+        private static void CaptureColors(out ConsoleColor fg, out ConsoleColor bg)
+        {
+            try
+            {
+                fg = Console.ForegroundColor;
+                bg = Console.BackgroundColor;
+            }
+            catch
+            {
+                fg = ConsoleColor.White;
+                bg = ConsoleColor.Black;
+            }
+        }
+
         private static void AppendText(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
@@ -349,7 +395,16 @@ namespace Shinx.GUI
 
         private static void Append(string text)
         {
-            if (_buffer.Count == 0) _buffer.Add("");
+            ConsoleColor fg, bg;
+            CaptureColors(out fg, out bg);
+            Append(text, fg, bg);
+        }
+
+        private static void Append(string text, ConsoleColor fg, ConsoleColor bg)
+        {
+            if (_buffer.Count == 0) _buffer.Add(new List<Cell>());
+            _currentFg = fg;
+            _currentBg = bg;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -359,33 +414,56 @@ namespace Shinx.GUI
 
                 if (c == '\n')
                 {
-                    _buffer.Add("");
+                    _buffer.Add(new List<Cell>());
                     continue;
                 }
 
                 if (c == '\b')
                 {
-                    string last = _buffer[_buffer.Count - 1];
-                    if (last.Length > 0)
-                        _buffer[_buffer.Count - 1] = last.Substring(0, last.Length - 1);
+                    List<Cell> last = _buffer[_buffer.Count - 1];
+                    if (last.Count > 0)
+                        last.RemoveAt(last.Count - 1);
                     continue;
                 }
 
                 if (c == '\t')
                 {
-                    Append("    ");
+                    Append("    ", fg, bg);
                     continue;
                 }
 
-                string cur = _buffer[_buffer.Count - 1];
-                if (cur.Length >= Cols)
+                List<Cell> cur = _buffer[_buffer.Count - 1];
+                if (cur.Count >= Cols)
                 {
-                    _buffer.Add(c.ToString());
+                    cur = new List<Cell>();
+                    _buffer.Add(cur);
                 }
-                else
-                {
-                    _buffer[_buffer.Count - 1] = cur + c;
-                }
+
+                cur.Add(new Cell { Ch = c, Fg = fg, Bg = bg });
+            }
+        }
+
+        private static Color ConsoleToColor(ConsoleColor color)
+        {
+            switch (color)
+            {
+                case ConsoleColor.Black: return Color.Black;
+                case ConsoleColor.DarkBlue: return Color.DarkBlue;
+                case ConsoleColor.DarkGreen: return Color.DarkGreen;
+                case ConsoleColor.DarkCyan: return Color.DarkCyan;
+                case ConsoleColor.DarkRed: return Color.DarkRed;
+                case ConsoleColor.DarkMagenta: return Color.DarkMagenta;
+                case ConsoleColor.DarkYellow: return Color.FromArgb(128, 128, 0);
+                case ConsoleColor.Gray: return Color.Gray;
+                case ConsoleColor.DarkGray: return Color.DarkGray;
+                case ConsoleColor.Blue: return Color.Blue;
+                case ConsoleColor.Green: return Color.Green;
+                case ConsoleColor.Cyan: return Color.Cyan;
+                case ConsoleColor.Red: return Color.Red;
+                case ConsoleColor.Magenta: return Color.Magenta;
+                case ConsoleColor.Yellow: return Color.Yellow;
+                case ConsoleColor.White: return Color.White;
+                default: return Color.White;
             }
         }
 
