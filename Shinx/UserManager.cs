@@ -89,7 +89,8 @@ namespace Shinx
                 if (username == "root")
                     Shell.currentDirectory = "/";
                 else
-                    Shell.currentDirectory = "/home/" + username + "/";
+                    Shell.currentDirectory = "/home/" + username;
+                Shell.previousDirectory = Shell.currentDirectory;
                 return true;
             }
             return false;

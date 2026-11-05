@@ -14,7 +14,7 @@ namespace Shinx.Commands
                 return;
             }
 
-            string path = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
+            string path = Shell.ResolvePath(args[0]);
 
             if (!File.Exists(path))
             {

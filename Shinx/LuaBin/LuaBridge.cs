@@ -129,9 +129,7 @@ namespace Shinx
         }
         private static string ResolvePath(string path)
         {
-            if (string.IsNullOrWhiteSpace(path)) return "/";
-            if (path.StartsWith("/")) return path;
-            return Path.Combine(Shell.currentDirectory, path).Replace('\\', '/');
+            return Shell.ResolvePath(path);
         }
         private static int L_WriteLine(ILuaState lua) { Console.WriteLine(lua.L_ToString(1)); return 0; }
         private static int L_Write(ILuaState lua) { Console.Write(lua.L_ToString(1)); return 0; }
@@ -191,7 +189,7 @@ namespace Shinx
                 lua.PushBoolean(false); lua.PushString("no such directory"); return 2;
             }
 
-            Shell.currentDirectory = path.Replace('\\', '/').TrimEnd('/') + "/";
+            Shell.setDirectory(path);
             lua.PushBoolean(true); return 1;
         }
         private static int L_CurrentUser(ILuaState lua) { lua.PushString(UserManager.currentUser); return 1; }

@@ -28,7 +28,7 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
+            string path = Shell.ResolvePath(args[1]);
 
             HashSet<string> groups = new HashSet<string>();
             foreach (string g in args[0].Split(','))

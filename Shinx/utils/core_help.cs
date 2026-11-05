@@ -10,9 +10,24 @@ namespace Shinx.Commands
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
+            foreach (char p in parameters)
+            {
+                if (p != 'e')
+                {
+                    Console.WriteLine("help: unknown option: -" + p);
+                    return;
+                }
+            }
+
             if (args.Length == 0)
             {
-                ShowAll();
+                List<string> lines = Format(new List<string>(peppe.commands.Keys));
+
+                if (parameters.Contains('e'))
+                    ShowInEditor(lines);
+                else
+                    Print(lines);
+
                 return;
             }
 
@@ -40,10 +55,8 @@ namespace Shinx.Commands
             Print(Format(matches));
         }
 
-        private static void ShowAll()
+        private static void ShowInEditor(List<string> lines)
         {
-            List<string> lines = Format(new List<string>(peppe.commands.Keys));
-
             try
             {
                 if (!Directory.Exists("/tmp")) Directory.CreateDirectory("/tmp");
@@ -51,7 +64,6 @@ namespace Shinx.Commands
             }
             catch (Exception e)
             {
-                // No writable filesystem: fall back to normal console output.
                 Console.WriteLine("help: " + e.Message);
                 Print(lines);
                 return;

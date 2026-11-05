@@ -236,12 +236,7 @@ namespace Shinx.Commands
 
         private static string ResolvePath(string path)
         {
-            if (path.StartsWith("/"))
-            {
-                return path;
-            }
-
-            return Shell.currentDirectory.TrimEnd('/') + "/" + path;
+            return Shell.ResolvePath(path);
         }
 
         private static bool HasParentSegment(string path)

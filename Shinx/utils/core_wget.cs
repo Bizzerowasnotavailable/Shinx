@@ -278,12 +278,7 @@ namespace Shinx.Commands
 
         private static string ResolvePath(string path)
         {
-            if (path.StartsWith("/"))
-            {
-                return path;
-            }
-
-            return Shell.currentDirectory.TrimEnd('/') + "/" + path;
+            return Shell.ResolvePath(path);
         }
 
         private static DownloadResult SendRequest(WebUrl start, bool quiet)

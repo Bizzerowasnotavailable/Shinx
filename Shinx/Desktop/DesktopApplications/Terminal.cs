@@ -212,6 +212,15 @@ namespace Shinx.GUI
                     ClearBuffer();
                     AppendText(Shell.Prompt());
                     break;
+
+                case LineAction.Cancel:
+                    lock (_gate)
+                    {
+                        Append("^C\n");
+                        Append(Shell.Prompt());
+                        TrimBuffer();
+                    }
+                    break;
             }
         }
 

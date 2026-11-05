@@ -14,9 +14,11 @@ namespace Shinx.Commands
             commands = new Dictionary<string, ICommand>();
 
             RegisterCommand("echo", new core_echo(), "display a message in the terminal");
-            RegisterCommand("help", new core_help(), "list commands in the editor or describe one command");
+            RegisterCommand("help", new core_help(), "list commands, or describe one (use -e to open the list in the editor)");
             RegisterCommand("clear", new core_clear(), "clear the terminal");
             RegisterCommand("ls", new core_ls(), "list files in a directory");
+            RegisterCommand("pwd", new core_pwd(), "print the current working directory");
+            RegisterCommand("history", new core_history(), "show or clear the command history");
             RegisterCommand("cp", new core_cp(), "copy files");
             RegisterCommand("mv", new core_mv(), "move files");
             RegisterCommand("mkdir", new core_mkdir(), "make a directory");

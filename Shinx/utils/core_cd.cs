@@ -8,29 +8,39 @@ namespace Shinx.Commands
     {
         public void Execute(string[] args, HashSet<char> parameters)
         {
+            string target;
+            bool printTarget = false;
+
             if (args.Length < 1)
             {
-                Console.WriteLine("usage: cd <destination> or cd .. to go back");
-                return;
+                target = Shell.GetHomeDirectory();
             }
-
-            if (args[0] == "..")
+            else if (args[0] == "-")
             {
-                Shell.returnDirectory();
-                return;
+                target = Shell.previousDirectory;
+                printTarget = true;
+            }
+            else
+            {
+                target = Shell.ResolvePath(args[0]);
             }
 
             try
             {
-                string fullPath = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
-
-                if (!Directory.Exists(fullPath))
+                if (!Directory.Exists(target))
                 {
-                    Console.WriteLine("cd: " + args[0] + ": no such directory");
+                    Console.WriteLine("cd: " + (args.Length > 0 ? args[0] : target) + ": no such directory");
                     return;
                 }
 
-                Shell.setDirectory(fullPath);
+                if (!PermissionManager.CanAccess(target, UserManager.currentUser))
+                {
+                    Console.WriteLine("cd: permission denied: " + (args.Length > 0 ? args[0] : target));
+                    return;
+                }
+
+                Shell.setDirectory(target);
+                if (printTarget) Console.WriteLine(target);
             }
             catch (Exception e)
             {

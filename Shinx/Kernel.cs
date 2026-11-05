@@ -58,6 +58,7 @@ namespace Shinx
                     if (UserManager.Login(username, password))
                     {
                         Console.WriteLine($"welcome {username}");
+                        Shell.LoadHistory();
                         loggedIn = true;
                     }
                     else
@@ -88,19 +89,23 @@ namespace Shinx
                     Run();
                 }
 
+                Shell.SaveHistory();
                 Console.WriteLine("logged out");
             }
         }
 
+        private int _inputRow;
+        private int _inputCol;
+
         protected override void Run()
         {
-            Console.Write(Shell.Prompt());
             Shell.Execute(ReadLine());
         }
 
         private string ReadLine()
         {
             LineEditor editor = new LineEditor(Shell.history);
+            BeginInputLine(editor);
 
             while (true)
             {
@@ -114,6 +119,12 @@ namespace Shinx
                         return editor.Text;
 
                     case LineAction.Cancel:
+                        try
+                        {
+                            ClearInputArea();
+                            Console.SetCursorPosition(_inputCol, _inputRow);
+                        }
+                        catch { }
                         Console.WriteLine("^C");
                         BeginInputLine(editor);
                         break;
@@ -132,18 +143,54 @@ namespace Shinx
 
         private void BeginInputLine(LineEditor editor)
         {
+            _inputRow = Console.CursorTop;
+            _inputCol = Console.CursorLeft;
             Console.Write(Shell.Prompt());
             RedrawInput(editor);
         }
 
+        private void ClearInputArea()
+        {
+            int width = Console.WindowWidth;
+            if (width < 1) width = 80;
+
+            string blank = new string(' ', width - 1);
+            int lastRow = Console.CursorTop;
+            if (lastRow < _inputRow) lastRow = _inputRow;
+
+            for (int row = lastRow; row >= _inputRow; row--)
+            {
+                Console.SetCursorPosition(0, row);
+                Console.Write(blank);
+            }
+        }
+
         private void RedrawInput(LineEditor editor)
         {
-            int promptLen = Shell.Prompt().Length;
-            Console.CursorLeft = promptLen;
-            Console.Write(new string(' ', Console.WindowWidth - promptLen - 1));
-            Console.CursorLeft = promptLen;
-            Console.Write(editor.Text);
-            Console.CursorLeft = promptLen + editor.Cursor;
+            string prompt = Shell.Prompt();
+            string text = editor.Text;
+            int width = Console.WindowWidth;
+            if (width < 1) width = 80;
+
+            try
+            {
+                ClearInputArea();
+
+                Console.SetCursorPosition(_inputCol, _inputRow);
+                Console.Write(prompt);
+                Console.Write(text);
+
+                int column = _inputCol + prompt.Length + editor.Cursor;
+                int row = _inputRow + (column / width);
+                int col = column % width;
+                Console.SetCursorPosition(col, row);
+            }
+            catch
+            {
+                try { Console.CursorLeft = 0; } catch { }
+                Console.Write(prompt);
+                Console.Write(text);
+            }
         }
 
         private string ReadPassword()

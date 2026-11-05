@@ -26,8 +26,7 @@ namespace Shinx.utils
 
             bool createParents = parameters.Contains('p');
             string dirArg = args[0].Replace(' ', '_');
-            string fullPath = dirArg.StartsWith("/") ? dirArg : Shell.currentDirectory.TrimEnd('/') + "/" + dirArg;
-            fullPath = fullPath.Replace('\\', '/').TrimEnd('/');
+            string fullPath = Shell.ResolvePath(dirArg);
 
             if (!PermissionManager.CanAccess(Shell.currentDirectory, UserManager.currentUser))
             {

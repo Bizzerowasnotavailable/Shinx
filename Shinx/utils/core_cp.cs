@@ -32,8 +32,8 @@ namespace Shinx.Commands
             {
                 if (recursive)
                 {
-                    string src = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
-                    string dst = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
+                    string src = Shell.ResolvePath(args[0]);
+                    string dst = Shell.ResolvePath(args[1]);
                     if (!PermissionManager.CanAccess(src, UserManager.currentUser))
                     {
                         Console.WriteLine("cp: permission denied: " + args[0]);
@@ -65,8 +65,8 @@ namespace Shinx.Commands
                 }
                 else
                 {
-                    string src = args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0];
-                    string dst = args[1].StartsWith("/") ? args[1] : Shell.currentDirectory.TrimEnd('/') + "/" + args[1];
+                    string src = Shell.ResolvePath(args[0]);
+                    string dst = Shell.ResolvePath(args[1]);
 
                     if (!PermissionManager.CanAccess(src, UserManager.currentUser))
                     {

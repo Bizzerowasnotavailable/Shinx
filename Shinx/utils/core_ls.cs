@@ -17,9 +17,9 @@ namespace Shinx.Commands
                 }
             }
 
-            string path = args.Length > 0 
-    ? (args[0].StartsWith("/") ? args[0] : Shell.currentDirectory.TrimEnd('/') + "/" + args[0])
-    : Shell.currentDirectory;
+            string path = args.Length > 0
+                ? Shell.ResolvePath(args[0])
+                : Shell.currentDirectory;
 
             try
             {
