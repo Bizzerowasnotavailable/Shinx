@@ -17,6 +17,7 @@ namespace Shinx.Commands
         private bool running = true;
         private string statusMessage = "";
         private bool _needsFullRedraw = true;
+        private int _lastRenderedLine = -1;
 
         public void Execute(string[] args, HashSet<char> parameters)
         {
@@ -62,11 +63,12 @@ namespace Shinx.Commands
         {
             int screenWidth = Console.WindowWidth;
             int screenHeight = Console.WindowHeight;
-            int viewHeight = screenHeight - 4;
+            int viewHeight = screenHeight - 3;
             int viewWidth = screenWidth - 4;
 
             int oldTop = topLine;
             int oldLeft = leftChar;
+            int previousLine = _lastRenderedLine;
 
             if (currentLine < topLine) topLine = currentLine;
             if (currentLine >= topLine + viewHeight) topLine = currentLine - viewHeight + 1;
@@ -77,7 +79,6 @@ namespace Shinx.Commands
 
             if (_needsFullRedraw)
             {
-                Console.Clear();
                 Console.SetCursorPosition(0, 0);
                 Console.BackgroundColor = ConsoleColor.Gray;
                 Console.ForegroundColor = ConsoleColor.Black;
@@ -110,9 +111,19 @@ namespace Shinx.Commands
                 Console.Write($" SHINX EDIT | L: {currentLine + 1} C: {currentCol + 1} | {path}".PadRight(screenWidth - 1));
                 Console.ResetColor();
 
+                if (previousLine != currentLine
+                    && previousLine >= topLine
+                    && previousLine < topLine + viewHeight)
+                {
+                    Console.SetCursorPosition(0, (previousLine - topLine) + 1);
+                    DrawLine(previousLine, viewWidth);
+                }
+
                 Console.SetCursorPosition(0, (currentLine - topLine) + 1);
                 DrawLine(currentLine, viewWidth);
             }
+
+            _lastRenderedLine = currentLine;
 
             int cursorX = (currentCol - leftChar) + 2;
             int cursorY = (currentLine - topLine) + 1;
@@ -170,7 +181,6 @@ namespace Shinx.Commands
                     if (key.Key == ConsoleKey.UpArrow && currentLine > 0) currentLine--;
                     else if (key.Key == ConsoleKey.DownArrow && currentLine < lines.Count - 1) currentLine++;
                     if (currentCol > lines[currentLine].Length) currentCol = lines[currentLine].Length;
-                    _needsFullRedraw = true;
                     break;
 
                 case ConsoleKey.LeftArrow:
@@ -232,14 +242,34 @@ namespace Shinx.Commands
 
         private void ShowGoToLinePrompt()
         {
+            int screenWidth = Console.WindowWidth;
+            int screenHeight = Console.WindowHeight;
+
             statusMessage = "Line: ";
-            Render();
+
+            try
+            {
+                Console.SetCursorPosition(0, screenHeight - 2);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write(statusMessage.PadRight(screenWidth - 1));
+                Console.ResetColor();
+
+                int promptX = statusMessage.Length;
+                if (promptX > screenWidth - 1) promptX = screenWidth - 1;
+                Console.SetCursorPosition(promptX, screenHeight - 2);
+            }
+            catch { }
+
             string input = Console.ReadLine();
+
             if (int.TryParse(input, out int l) && l > 0 && l <= lines.Count)
             {
                 currentLine = l - 1;
                 currentCol = 0;
             }
+
+            statusMessage = "Editing " + Path.GetFileName(path);
+            _needsFullRedraw = true;
         }
     }
 }
