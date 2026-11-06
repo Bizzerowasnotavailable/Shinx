@@ -40,9 +40,9 @@ namespace Shinx
             UserManager.Init();
             PermissionManager.Init();
             NetworkManager.Init();
+            Shinx.Audio.AudioManager.Initialize();
             commandHandler = new peppe();
             Shinx.GUI.AppManager.Initialize();
-
             Console.WriteLine("[OK] Boot successful");
 
             while (true)

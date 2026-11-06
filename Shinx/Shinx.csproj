@@ -13,6 +13,9 @@
     <CosmosEnableMouse>true</CosmosEnableMouse>
     <CosmosEnableTimer>true</CosmosEnableTimer>
     <CosmosEnableScheduler>true</CosmosEnableScheduler>
+    <CosmosEnableAudio>true</CosmosEnableAudio>
+
+    <NoWarn>$(NoWarn);COSMOS0003</NoWarn>
 
     <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>

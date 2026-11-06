@@ -107,6 +107,12 @@ namespace Shinx
             State.PushCSharpFunction(L_NetStatus); State.SetField(-2, "netstatus");
             State.PushCSharpFunction(L_NetResolve); State.SetField(-2, "netresolve");
             State.PushCSharpFunction(L_NetGet); State.SetField(-2, "netget");
+            State.PushCSharpFunction(L_AudioStatus); State.SetField(-2, "audio_status");
+            State.PushCSharpFunction(L_AudioDevices); State.SetField(-2, "audio_devices");
+            State.PushCSharpFunction(L_AudioVolume); State.SetField(-2, "audio_volume");
+            State.PushCSharpFunction(L_AudioPlay); State.SetField(-2, "audio_play");
+            State.PushCSharpFunction(L_AudioBeep); State.SetField(-2, "audio_beep");
+            State.PushCSharpFunction(L_AudioStop); State.SetField(-2, "audio_stop");
             State.PushCSharpFunction(L_HttpServe); State.SetField(-2, "httpserve");
             State.PushCSharpFunction(L_GuiRegister); State.SetField(-2, "gui_register");
             State.PushCSharpFunction(L_GuiClose); State.SetField(-2, "gui_close");
@@ -463,6 +469,86 @@ namespace Shinx
             {
                 lua.PushNil(); lua.PushString(e.Message); return 2;
             }
+        }
+        private static int L_AudioStatus(ILuaState lua)
+        {
+            lua.NewTable();
+            lua.PushString("enabled"); lua.PushBoolean(Shinx.Audio.AudioManager.IsEnabled); lua.SetTable(-3);
+            lua.PushString("available"); lua.PushBoolean(Shinx.Audio.AudioManager.IsAvailable); lua.SetTable(-3);
+            lua.PushString("device"); lua.PushString(Shinx.Audio.AudioManager.DeviceName ?? ""); lua.SetTable(-3);
+            lua.PushString("driver"); lua.PushString(Shinx.Audio.AudioManager.DriverName ?? ""); lua.SetTable(-3);
+            lua.PushString("rate"); lua.PushInteger(Shinx.Audio.AudioManager.SampleRate); lua.SetTable(-3);
+            lua.PushString("volume"); lua.PushInteger(Shinx.Audio.AudioManager.Volume); lua.SetTable(-3);
+            lua.PushString("playing"); lua.PushBoolean(Shinx.Audio.AudioManager.IsPlaying); lua.SetTable(-3);
+            lua.PushString("current"); lua.PushString(Shinx.Audio.AudioManager.CurrentName ?? ""); lua.SetTable(-3);
+            return 1;
+        }
+        private static int L_AudioDevices(ILuaState lua)
+        {
+            lua.NewTable();
+            int count = Shinx.Audio.AudioManager.DeviceCount;
+            int i = 1;
+
+            for (int d = 0; d < count; d++)
+            {
+                if (!Shinx.Audio.AudioManager.TryGetDevice(d, out string name, out string driver,
+                    out uint rate, out int channels, out int bits))
+                    continue;
+
+                lua.NewTable();
+                lua.PushString("name"); lua.PushString(name); lua.SetTable(-3);
+                lua.PushString("driver"); lua.PushString(driver); lua.SetTable(-3);
+                lua.PushString("rate"); lua.PushInteger(rate); lua.SetTable(-3);
+                lua.PushString("channels"); lua.PushInteger(channels); lua.SetTable(-3);
+                lua.PushString("bits"); lua.PushInteger(bits); lua.SetTable(-3);
+                lua.RawSetI(-2, i++);
+            }
+
+            return 1;
+        }
+        private static int L_AudioVolume(ILuaState lua)
+        {
+            if (lua.GetTop() >= 1 && lua.Type(1) == LuaType.LUA_TNUMBER)
+                Shinx.Audio.AudioManager.Volume = (int)lua.L_CheckInteger(1);
+
+            lua.PushInteger(Shinx.Audio.AudioManager.Volume);
+            return 1;
+        }
+        private static int L_AudioPlay(ILuaState lua)
+        {
+            string path = lua.L_CheckString(1);
+            bool wait = lua.GetTop() >= 2 && lua.Type(2) == LuaType.LUA_TBOOLEAN && lua.ToBoolean(2);
+            bool force = lua.GetTop() >= 3 && lua.Type(3) == LuaType.LUA_TBOOLEAN && lua.ToBoolean(3);
+
+            if (!Shinx.Audio.AudioManager.PlayFile(path, wait, force, out string error))
+            {
+                lua.PushBoolean(false); lua.PushString(error); return 2;
+            }
+
+            lua.PushBoolean(true); return 1;
+        }
+        private static int L_AudioBeep(ILuaState lua)
+        {
+            int frequency = 800;
+            int duration = 200;
+
+            if (lua.GetTop() >= 1 && lua.Type(1) == LuaType.LUA_TNUMBER)
+                frequency = (int)lua.L_CheckInteger(1);
+
+            if (lua.GetTop() >= 2 && lua.Type(2) == LuaType.LUA_TNUMBER)
+                duration = (int)lua.L_CheckInteger(2);
+
+            if (!Shinx.Audio.AudioManager.Beep(frequency, duration, out string error))
+            {
+                lua.PushBoolean(false); lua.PushString(error); return 2;
+            }
+
+            lua.PushBoolean(true); return 1;
+        }
+        private static int L_AudioStop(ILuaState lua)
+        {
+            lua.PushInteger(Shinx.Audio.AudioManager.Stop());
+            return 1;
         }
         private static int L_HttpServe(ILuaState lua)
         {

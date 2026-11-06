@@ -46,6 +46,7 @@ namespace Shinx.Commands
             RegisterCommand("desktop", new core_desktop(), "launch the graphical environment");
             RegisterCommand("net", new core_network(), "manage network configuration");
             RegisterCommand("lpkg", new core_pkg(), "package manager");
+            RegisterCommand("audio", new core_audio(), "play WAV files, tones and set volume");
         }
 
         public void Execute(string input)
