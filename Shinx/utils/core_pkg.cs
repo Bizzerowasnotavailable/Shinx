@@ -303,5 +303,10 @@ namespace Shinx.Commands
             if (rMaj != lMaj) return rMaj > lMaj;
             return rMin > lMin;
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: lpkg list | install <name> | remove <name> | upgrade [name]");
+        }
     }
 }

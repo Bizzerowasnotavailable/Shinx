@@ -570,5 +570,10 @@ namespace Shinx.Commands
                 get { return Scheme + "://" + Authority + Target; }
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: wget [-q] [-O <file>] <url> [output]");
+        }
     }
 }

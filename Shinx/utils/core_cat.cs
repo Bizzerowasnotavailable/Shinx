@@ -35,5 +35,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"cat: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: cat <file>");
+        }
     }
 }

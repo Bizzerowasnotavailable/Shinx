@@ -8,10 +8,12 @@ namespace Shinx
     public class LuaCommand : ICommand
     {
         private string luaFunctionName;
+        private string commandName;
 
-        public LuaCommand(string functionName)
+        public LuaCommand(string functionName, string commandName)
         {
             luaFunctionName = functionName;
+            this.commandName = commandName;
         }
 
         public void Execute(string[] args, HashSet<char> parameters)
@@ -37,6 +39,15 @@ namespace Shinx
                 Console.WriteLine("lua error: " + L.ToString(-1));
                 L.Pop(1);
             }
+        }
+
+        public void Usage()
+        {
+            string usage = LuaBridge.GetCommandUsage(commandName);
+            if (!string.IsNullOrEmpty(usage))
+                Console.WriteLine(usage);
+            else
+                Console.WriteLine("usage: " + commandName + " [-h]");
         }
     }
 }

@@ -78,5 +78,10 @@ namespace Shinx.Commands
                 Console.WriteLine("ls: " + e.Message);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: ls [-l] [path]");
+        }
     }
 }

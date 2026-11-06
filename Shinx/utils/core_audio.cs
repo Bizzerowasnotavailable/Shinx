@@ -8,12 +8,6 @@ namespace Shinx.Commands
     {
         public void Execute(string[] args, HashSet<char> parameters)
         {
-            if (parameters.Contains('h'))
-            {
-                Usage();
-                return;
-            }
-
             if (args.Length == 0)
             {
                 AudioManager.PrintStatus();
@@ -145,7 +139,7 @@ namespace Shinx.Commands
             return true;
         }
 
-        private static void Usage()
+        public void Usage()
         {
             Console.WriteLine("usage: audio [-h] [status|devices|volume|play|beep|stop]");
             Console.WriteLine("  audio status");

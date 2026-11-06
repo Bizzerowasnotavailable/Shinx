@@ -9,5 +9,10 @@ namespace Shinx.Commands
         {
             Console.WriteLine(Shell.currentDirectory);
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: pwd");
+        }
     }
 }

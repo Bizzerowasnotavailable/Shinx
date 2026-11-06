@@ -46,7 +46,7 @@ namespace Shinx.Commands
             RegisterCommand("desktop", new core_desktop(), "launch the graphical environment");
             RegisterCommand("net", new core_network(), "manage network configuration");
             RegisterCommand("lpkg", new core_pkg(), "package manager");
-            RegisterCommand("audio", new core_audio(), "play WAV files, tones and set volume");
+            RegisterCommand("audio", new core_audio(), "play WAV files, beep and set volume");
         }
 
         public void Execute(string input)
@@ -95,10 +95,19 @@ namespace Shinx.Commands
             for (int i = 1; i < parts.Count; i++)
                 args[i - 1] = parts[i];
 
-            if (commands.ContainsKey(commandName))
-                commands[commandName].Execute(args, parameters);
-            else
+            if (!commands.ContainsKey(commandName))
+            {
                 Console.WriteLine($"command not found, what exactly is {commandName} ?? ");
+                return;
+            }
+
+            if (parameters.Contains('h'))
+            {
+                commands[commandName].Usage();
+                return;
+            }
+
+            commands[commandName].Execute(args, parameters);
         }
         public static void RegisterCommand(string name, ICommand command, string desc = "lua command")
         {

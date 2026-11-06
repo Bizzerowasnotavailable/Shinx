@@ -41,5 +41,10 @@ namespace Shinx.Commands
             for (int i = start; i < Shell.history.Count; i++)
                 Console.WriteLine((i + 1).ToString().PadLeft(4) + "  " + Shell.history[i]);
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: history [-c] [count]");
+        }
     }
 }

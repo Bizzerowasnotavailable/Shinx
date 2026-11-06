@@ -122,5 +122,10 @@ namespace Shinx.Commands
                 CopyDirectory(dir, destDir);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: cp [-r] [-f] <source> <destination>");
+        }
     }
 }

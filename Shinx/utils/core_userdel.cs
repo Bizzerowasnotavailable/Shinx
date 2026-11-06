@@ -40,5 +40,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"userdel: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: userdel <username>");
+        }
     }
 }

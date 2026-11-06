@@ -60,5 +60,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"passwd: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: passwd <username> <old password> <new password>");
+        }
     }
 }

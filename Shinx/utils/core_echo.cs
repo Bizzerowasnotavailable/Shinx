@@ -15,5 +15,10 @@ namespace Shinx.Commands
 
             Console.WriteLine(string.Join(" ", args));
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: echo [text...]");
+        }
     }
 }

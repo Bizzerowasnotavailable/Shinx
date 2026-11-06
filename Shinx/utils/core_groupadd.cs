@@ -30,5 +30,10 @@ namespace Shinx.Commands
             }
             
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: groupadd <groupname>");
+        }
     }
 }

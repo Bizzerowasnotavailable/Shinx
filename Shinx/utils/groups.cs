@@ -23,5 +23,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"groups: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: groups [username]");
+        }
     }
 }

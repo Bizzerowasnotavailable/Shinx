@@ -72,5 +72,10 @@ namespace Shinx.Commands
                 ApplyGroupRecursive(dir, new HashSet<string>(groups));
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: chgrp [-r] <group1,group2,...> <path>");
+        }
     }
 }

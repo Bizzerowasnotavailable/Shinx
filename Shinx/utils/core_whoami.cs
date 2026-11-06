@@ -17,5 +17,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"whoami: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: whoami");
+        }
     }
 }

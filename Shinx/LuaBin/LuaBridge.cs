@@ -23,6 +23,7 @@ namespace Shinx
         public static string InputFocus => _inputFocus;
 
         private static readonly Dictionary<string, string> _inputState = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> _commandUsage = new Dictionary<string, string>();
         private static readonly Dictionary<string, bool> _checkboxState = new Dictionary<string, bool>();
         private static string _inputFocus = "";
         private static readonly Queue<ConsoleKeyInfo> _inputQueue = new Queue<ConsoleKeyInfo>();
@@ -206,8 +207,15 @@ namespace Shinx
             string desc = lua.GetTop() >= 3 ? lua.L_CheckString(3) : "lua command";
             lua.PushValue(2);
             lua.SetGlobal("__cmd_" + name);
-            peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name), desc);
+            _commandUsage[name] = lua.GetTop() >= 4 ? lua.L_CheckString(4) : "";
+            peppe.RegisterCommand(name, new LuaCommand("__cmd_" + name, name), desc);
             return 0;
+        }
+
+        public static string GetCommandUsage(string name)
+        {
+            string usage;
+            return _commandUsage.TryGetValue(name, out usage) ? usage : "";
         }
         private static int L_Args(ILuaState lua) { lua.GetGlobal("__args"); return 1; }
         private static int L_Params(ILuaState lua) { lua.GetGlobal("__params"); return 1; }

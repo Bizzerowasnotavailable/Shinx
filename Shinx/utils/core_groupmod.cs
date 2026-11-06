@@ -53,5 +53,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"groupmod: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: groupmod <add|del> <username> <groupname>");
+        }
     }
 }

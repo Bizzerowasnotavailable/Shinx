@@ -22,4 +22,4 @@
     shinx.writeline("/> >|    ||")
     shinx.writeline(" ")
     shinx.writeline("by Bizzero") -- removed the year cuz yeah
-end, "port of bunnysay utility")
+end, "port of bunnysay utility", "usage: bunnysay <message>")

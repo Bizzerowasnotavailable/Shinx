@@ -104,5 +104,10 @@ namespace Shinx.Commands
         {
             return (x >> n) | (x << (32 - n));
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: sha256sum <string>");
+        }
     }
 }

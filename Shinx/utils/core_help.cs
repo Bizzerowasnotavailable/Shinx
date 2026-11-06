@@ -36,6 +36,7 @@ namespace Shinx.Commands
             if (peppe.commands.ContainsKey(query))
             {
                 Console.WriteLine(query + ": " + Describe(query));
+                peppe.commands[query].Usage();
                 return;
             }
 
@@ -101,6 +102,11 @@ namespace Shinx.Commands
             if (peppe.descriptions.TryGetValue(name, out desc) && !string.IsNullOrEmpty(desc))
                 return desc;
             return "no description";
+        }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: help [-e] [command]");
         }
     }
 }

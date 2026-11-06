@@ -58,5 +58,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"rm: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: rm [-r] <target>");
+        }
     }
 }

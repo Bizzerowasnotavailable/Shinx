@@ -22,5 +22,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"exit: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: exit");
+        }
     }
 }

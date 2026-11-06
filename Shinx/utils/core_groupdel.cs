@@ -35,5 +35,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"groupdel: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: groupdel <groupname>");
+        }
     }
 }

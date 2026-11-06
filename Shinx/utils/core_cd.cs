@@ -47,5 +47,10 @@ namespace Shinx.Commands
                 Console.WriteLine("cd: " + e.Message);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: cd [directory|-]");
+        }
     }
 }

@@ -99,5 +99,10 @@ namespace Shinx.Commands
                 Console.WriteLine("mv: " + e.Message);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: mv [-r] [-f] <source> <destination>");
+        }
     }
 }

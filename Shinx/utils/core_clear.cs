@@ -9,5 +9,10 @@ namespace Shinx.Commands
         {
             ConsoleUi.Clear(); // shrimple as that
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: clear");
+        }
     }
 }

@@ -317,5 +317,10 @@ namespace Shinx.Commands
                 };
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: http [root] [port]");
+        }
     }
 }

@@ -29,5 +29,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"su: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: su <username> <password>");
+        }
     }
 }

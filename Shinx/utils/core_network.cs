@@ -70,5 +70,16 @@ namespace Shinx.Commands
                     break;
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: net <command>");
+            Console.WriteLine("  net status");
+            Console.WriteLine("  net dhcp");
+            Console.WriteLine("  net static <ip> <mask> <gateway>");
+            Console.WriteLine("  net dns <ip>");
+            Console.WriteLine("  net resolve <hostname>");
+            Console.WriteLine("  net disconnect");
+        }
     }
 }

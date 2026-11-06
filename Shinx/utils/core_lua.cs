@@ -67,5 +67,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"lua: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: lua <file.lua> [args...] or lua \"inline code\"");
+        }
     }
 }

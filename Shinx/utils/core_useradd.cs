@@ -61,5 +61,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"useradd: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: useradd <username> <password>");
+        }
     }
 }

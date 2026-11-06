@@ -83,5 +83,10 @@ namespace Shinx.utils
                     Directory.CreateDirectory(segment);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: mkdir [-p] <directory>");
+        }
     }
 }

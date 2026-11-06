@@ -271,5 +271,10 @@ namespace Shinx.Commands
             statusMessage = "Editing " + Path.GetFileName(path);
             _needsFullRedraw = true;
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: edit <file>");
+        }
     }
 }

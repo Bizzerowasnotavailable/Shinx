@@ -68,5 +68,10 @@ namespace Shinx.Commands
                 ApplyOwnerRecursive(dir, owner);
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: chown [-r] <owner> <path>");
+        }
     }
 }

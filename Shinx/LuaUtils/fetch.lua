@@ -51,4 +51,4 @@
         shinx.resetcolor()
         shinx.writeline("error in fetch: " .. err)
     end
-end, "show system info")
+end, "show system info", "usage: fetch")

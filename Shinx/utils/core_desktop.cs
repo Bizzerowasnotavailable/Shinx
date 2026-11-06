@@ -19,5 +19,10 @@ namespace Shinx.Commands
                 Console.WriteLine($"desktop: {e.Message}");
             }
         }
+
+        public void Usage()
+        {
+            Console.WriteLine("usage: desktop");
+        }
     }
 }
